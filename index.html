@@ -79,7 +79,7 @@
         <!-- Header -->
         <div class="text-center mb-10">
             <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-2">
-                Generator Prompt by Handiks
+                Generator Prompt Video
             </h1>
             <p class="text-slate-400 text-lg">Rancang skenario video AI Anda dengan presisi tinggi.</p>
         </div>
@@ -360,7 +360,7 @@
                         <label for="outputLanguage" class="block text-sm font-medium text-slate-300 mb-1">Bahasa Output Prompt</label>
                         <select id="outputLanguage" class="w-full p-2.5 glass-input rounded-md">
                             <option value="id">Bahasa Indonesia</option>
-                            <option value="en">English</option>
+                            <option value="en">English (via Gemini API)</option>
                         </select>
                     </div>
                 </div>
@@ -765,28 +765,23 @@
             const t = {
                 main_command: "PERINTAH UTAMA: Buat video berdasarkan deskripsi naratif berikut dalam satu alur yang koheren dan patuhi semua detail peran, aksi, dan dialog.",
                 lip_sync_command: "PERINTAH WAJIB: Pastikan gerak bibir (lip-sync) setiap karakter sinkron secara akurat dengan dialog yang diucapkan sesuai bahasa yang dipilih.",
+                conversation_flow_command: "PERINTAH WAJIB UNTUK ALUR PERCAKAPAN: Terapkan sistem giliran bicara yang ketat. Satu karakter harus sepenuhnya diam setelah menyelesaikan dialognya. Karakter berikutnya hanya boleh mulai berbicara atau bereaksi setelah karakter pertama benar-benar berhenti.",
                 scene_intro: (style, quality, ratio, location, time, atmosphere, lighting, dof) => `Buat sebuah video ${style} berkualitas ${quality} dengan rasio ${ratio}. Adegan berlatar di ${location} pada ${time}, menciptakan atmosfer ${atmosphere} dengan pencahayaan ${lighting} dan efek kedalaman kamera ${dof}.`,
                 chars_intro: "Karakter yang terlibat adalah: ",
                 char_desc: (name, desc, personality, position, role) => `${name} (${desc}, bersifat ${personality}) sebagai ${role} yang berada di posisi ${position}`,
                 char_desc_no_role: (name, desc, personality, position) => `${name} (${desc}, bersifat ${personality}) yang berada di posisi ${position}`,
                 interaction_intro: "Alur interaksi adalah sebagai berikut: ",
-                qna_sequence: (askerTiming, asker, askerAction, askerMood, askerAccent, question, answererTiming, answerer, answererAction, answererMood, answererAccent, answer) => {
-                    let askerPart = (askerTiming ? `Pada detik ${askerTiming}, ` : '') + `${asker} (${askerAction}) bertanya dengan mood ${askerMood} (Logat: ${askerAccent}), "${question}"`;
-                    let answererPart = (answererTiming ? `Pada detik ${answererTiming}, ` : '') + `${answerer} (${answererAction}) kemudian menjawab dengan mood ${answererMood} (Logat: ${answererAccent}), "${answer}"`;
-                    return `${askerPart}. ${answererPart}`;
+                dialog_turn: (timing, speaker, action, mood, accent, text, reaction, listener) => {
+                    let mainPart = (timing ? `Pada detik ${timing}, ` : '') + `${speaker} (${action}) berbicara dengan mood ${mood} (Logat: ${accent}) dan mengatakan, "${text}".`;
+                    let reactionPart = reaction ? ` Sebagai reaksi, ${listener} ${reaction}.` : '';
+                    return mainPart + reactionPart;
                 },
-                single_action: (timing, speaker, action, mood, accent, text) => {
-                    let part = (timing ? `Pada detik ${timing}, ` : '') + `${speaker} melakukan aksi (${action}), berbicara dengan mood ${mood} (Logat: ${accent}) dan mengatakan, "${text}"`;
-                    return part;
-                },
-                reaction_desc: (reaction) => ` Reaksi dari pendengar adalah ${reaction}`,
                 cinematic_intro: " Secara sinematik, gunakan gaya berikut: ",
                 shot_desc: (type, timing) => `${type} pada durasi ${timing}`,
                 output_duration: (duration) => ` Perkirakan durasi total video adalah ${duration}.`,
                 audio_desc: (music, volume) => ` Iringi video dengan musik ${music} pada volume ${volume}.`,
                 avoid_desc: " Hindari elemen-elemen berikut: ",
-                connector: ", ",
-                then_connector: " Selanjutnya, ",
+                then_connector: "Selanjutnya, ",
                 and_connector: " dan "
             };
             
@@ -795,6 +790,7 @@
             // Main Command
             promptParts.push(t.main_command);
             promptParts.push(t.lip_sync_command);
+            promptParts.push(t.conversation_flow_command);
 
             // Scene
             promptParts.push(t.scene_intro(
@@ -832,38 +828,19 @@
             const dialogForms = document.querySelectorAll('.dialog-segment');
             if (dialogForms.length > 0) {
                 let dialogTextParts = [];
-                let i = 0;
-                while (i < dialogForms.length) {
-                    if (i + 1 < dialogForms.length) {
-                        const num1 = i + 1;
-                        const num2 = i + 2;
-                        
-                        const askerTiming = getDisplayValue(`waktuAksi${num1}`);
-                        const askerAction = getDisplayValue(`aksiPembicara${num1}`);
-                        const answererTiming = getDisplayValue(`waktuAksi${num2}`);
-                        const answererAction = getDisplayValue(`aksiPembicara${num2}`);
-
-                        dialogTextParts.push(t.qna_sequence(
-                            askerTiming, penanyaNama, askerAction, getDisplayValue(`moodDialog${num1}`), getDisplayValue(`bahasaDialog${num1}`), getDisplayValue(`dialogKunci${num1}`),
-                            answererTiming, penjawabNama, answererAction, getDisplayValue(`moodDialog${num2}`), getDisplayValue(`bahasaDialog${num2}`), getDisplayValue(`dialogKunci${num2}`)
-                        ));
-                        i += 2;
-                        continue;
-                    }
-                    
-                    const num1 = i + 1;
+                for (let i = 0; i < dialogForms.length; i++) {
+                    const num = i + 1;
                     const speaker = (i % 2 === 0) ? penanyaNama : penjawabNama;
+                    const listener = (i % 2 === 0) ? penjawabNama : penanyaNama;
                     
-                    const singleTiming = getDisplayValue(`waktuAksi${num1}`);
-                    const singleActionDesc = getDisplayValue(`aksiPembicara${num1}`);
+                    const timing = getDisplayValue(`waktuAksi${num}`);
+                    const action = getDisplayValue(`aksiPembicara${num}`);
+                    const mood = getDisplayValue(`moodDialog${num}`);
+                    const accent = getDisplayValue(`bahasaDialog${num}`);
+                    const text = getDisplayValue(`dialogKunci${num}`);
+                    const reaction = getDisplayValue(`reaksiPendengar${num}`);
 
-                    let singleAction = t.single_action(singleTiming, speaker, singleActionDesc, getDisplayValue(`moodDialog${num1}`), getDisplayValue(`bahasaDialog${num1}`), getDisplayValue(`dialogKunci${num1}`));
-                    const reaction = getDisplayValue(`reaksiPendengar${num1}`);
-                    if(reaction) {
-                        singleAction += t.reaction_desc(reaction);
-                    }
-                    dialogTextParts.push(singleAction + ".");
-                    i += 1;
+                    dialogTextParts.push(t.dialog_turn(timing, speaker, action, mood, accent, text, reaction, listener));
                 }
 
                 if (dialogTextParts.length > 0) {
@@ -899,7 +876,7 @@
                     }
                     shotDescs.push(t.shot_desc(shotType, getDisplayValue(`shotTiming${num}`)));
                 });
-                 promptParts.push(t.cinematic_intro + shotDescs.join(t.connector) + ".");
+                 promptParts.push(t.cinematic_intro + shotDescs.join(", ") + ".");
             }
 
             // Duration
@@ -948,7 +925,7 @@
 
             // --- GEMINI TRANSLATION ---
             if (outputLang === 'en') {
-                showNotification('Sedang Menerjemahkan...', 10000);
+                showNotification('Menerjemahkan dengan Gemini...', 10000);
                 try {
                     const translationPrompt = `Translate the following text to English. IMPORTANT RULE: Do not translate any text that is inside quotation marks ("..."). Keep the text inside the quotation marks in its original language. Text to translate: ${finalPrompt}`;
                     
