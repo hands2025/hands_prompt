@@ -4,79 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generator Prompt by Handiks</title>
-    <!-- PENAMBAHAN: Ikon untuk tab browser -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%236366f1'/><rect x='15' y='15' width='70' height='70' rx='10' fill='none' stroke='%23e0e7ff' stroke-width='8'/><rect x='10' y='25' width='10' height='10' fill='%23e0e7ff'/><rect x='10' y='45' width='10' height='10' fill='%23e0e7ff'/><rect x='10' y='65' width='10' height='10' fill='%23e0e7ff'/><rect x='80' y='25' width='10' height='10' fill='%23e0e7ff'/><rect x='80' y='45' width='10' height='10' fill='%23e0e7ff'/><rect x='80' y='65' width='10' height='10' fill='%23e0e7ff'/></svg>">
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #020617; /* Slate 950 - lebih gelap */
-        }
-
-        /* Custom scrollbar */
+        body { font-family: 'Inter', sans-serif; background: #020617; }
         textarea::-webkit-scrollbar { width: 8px; }
-        textarea::-webkit-scrollbar-track { background: #1e293b; border-radius: 10px; } /* Slate 800 */
-        textarea::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; } /* Slate 600 */
-        textarea::-webkit-scrollbar-thumb:hover { background: #64748b; } /* Slate 500 */
-        
+        textarea::-webkit-scrollbar-track { background: #1e293b; border-radius: 10px; }
+        textarea::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        textarea::-webkit-scrollbar-thumb:hover { background: #64748b; }
         .hidden { display: none; }
-        
-        select:disabled {
-            background-color: #334155; /* Slate 700 */
-            opacity: 0.7;
-            cursor: not-allowed;
-        }
-
-        /* Glassmorphism Effect */
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.6); /* Slate 900 with opacity */
-            backdrop-filter: blur(16px) saturate(180%);
-            -webkit-backdrop-filter: blur(16px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .glass-section-header {
-             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .glass-input {
-            color: #f1f5f9; /* Slate 100 - Teks input lebih terang */
-            background-color: rgba(2, 6, 23, 0.7) !important; /* Slate 950 with opacity */
-            border-color: rgba(51, 65, 85, 0.8) !important; /* Slate 700 with opacity */
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-        .glass-input:focus {
-             border-color: rgba(96, 165, 250, 0.8) !important; /* Blue 400 */
-             box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.4);
-        }
-        
-        .card-bg {
-            background-color: rgba(30, 41, 59, 0.5); /* Slate 800 with opacity */
-        }
-        
-        /* Loading Spinner */
-        .loader {
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #6366f1;
-            border-radius: 50%;
-            width: 16px;
-            height: 16px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        select:disabled { background-color: #334155; opacity: 0.7; cursor: not-allowed; }
+        .glass-panel { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .glass-section-header { border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .glass-input { color: #f1f5f9; background-color: rgba(2, 6, 23, 0.7) !important; border-color: rgba(51, 65, 85, 0.8) !important; transition: border-color 0.3s, box-shadow 0.3s; }
+        .glass-input:focus { border-color: rgba(96, 165, 250, 0.8) !important; box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.4); }
+        .card-bg { background-color: rgba(30, 41, 59, 0.5); }
+        .loader { border: 2px solid #f3f3f3; border-top: 2px solid #6366f1; border-radius: 50%; width: 16px; height: 16px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .gemini-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); }
+        .gemini-btn-textarea { right: 8px; top: 8px; transform: none; }
     </style>
 </head>
 <body class="p-4 md:p-8 bg-slate-950">
     <div class="glass-panel text-slate-200 p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-4xl mx-auto">
         
-        <!-- Header -->
         <div class="text-center mb-10">
             <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-2">
                 Generator Prompt by Handiks
@@ -85,7 +38,7 @@
         </div>
 
         <form id="veo3Form" class="flex flex-col space-y-6">
-            <!-- 1. Informasi Umum -->
+            <!-- Informasi Umum -->
             <div class="card-bg rounded-lg border border-slate-700/80">
                 <div class="glass-section-header flex items-center justify-between p-4">
                     <div class="flex items-center gap-3">
@@ -94,9 +47,12 @@
                     </div>
                 </div>
                 <div class="p-5 space-y-4">
-                    <div>
+                    <div class="relative">
                         <label for="judulSkenario" class="block text-sm font-medium text-slate-300 mb-1">Judul Skenario</label>
-                        <input type="text" id="judulSkenario" class="w-full p-2.5 glass-input rounded-md" placeholder="Contoh: Wawancara Eksklusif">
+                        <input type="text" id="judulSkenario" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Contoh: Wawancara Eksklusif">
+                        <button type="button" class="gemini-btn" data-target-id="judulSkenario" data-prompt-type="title" title="Beri Ide Judul dengan Gemini">
+                            <i data-lucide="wand-2" class="w-5 h-5 text-purple-400 hover:text-purple-300"></i>
+                        </button>
                     </div>
                     <div>
                         <label for="lokasiPercakapan" class="block text-sm font-medium text-slate-300 mb-1">Lokasi</label>
@@ -147,7 +103,7 @@
                 </div>
             </div>
 
-            <!-- 2. Detail Karakter -->
+            <!-- Detail Karakter -->
             <div class="card-bg rounded-lg border border-slate-700/80 flex flex-col">
                 <div class="glass-section-header flex items-center justify-between p-4">
                     <div class="flex items-center gap-3">
@@ -155,9 +111,7 @@
                         <h2 class="text-xl font-bold text-slate-100">Karakter (<span id="characterCount">1</span>)</h2>
                     </div>
                 </div>
-                <div id="characterContainer" class="p-5 space-y-6 flex-grow">
-                    <!-- Karakter akan ditambahkan secara dinamis -->
-                </div>
+                <div id="characterContainer" class="p-5 space-y-6 flex-grow"></div>
                 <div class="p-5 mt-auto border-t border-slate-700/60 flex items-center gap-4">
                        <button type="button" id="addCharacterBtn" class="flex items-center justify-center gap-2 w-full bg-indigo-600/80 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md transition">
                            <i data-lucide="user-plus" class="w-4 h-4"></i><span>Tambah Karakter</span>
@@ -168,7 +122,7 @@
                 </div>
             </div>
 
-            <!-- 3. Alur Dialog -->
+            <!-- Alur Dialog -->
             <div class="card-bg rounded-lg border border-slate-700/80 flex flex-col">
                 <div class="glass-section-header flex items-center justify-between p-4">
                     <div class="flex items-center gap-3">
@@ -176,9 +130,7 @@
                         <h2 class="text-xl font-bold text-slate-100">Alur Dialog (<span id="dialogCount">1</span>)</h2>
                     </div>
                 </div>
-                 <div id="dialogContainer" class="p-5 space-y-6 flex-grow">
-                    <!-- Dialog akan ditambahkan secara dinamis -->
-                </div>
+                 <div id="dialogContainer" class="p-5 space-y-6 flex-grow"></div>
                 <div class="p-5 mt-auto border-t border-slate-700/60 flex items-center gap-4">
                        <button type="button" id="addDialogBtn" class="flex items-center justify-center gap-2 w-full bg-green-600/80 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md transition">
                            <i data-lucide="plus" class="w-4 h-4"></i><span>Tambah Dialog</span>
@@ -189,7 +141,7 @@
                 </div>
             </div>
 
-            <!-- 4. Aksi Penutup / Resolusi -->
+            <!-- Aksi Penutup -->
             <div class="card-bg rounded-lg border border-slate-700/80">
                 <div class="glass-section-header flex items-center gap-3 p-4">
                     <i data-lucide="flag" class="w-6 h-6 text-emerald-400"></i>
@@ -201,7 +153,7 @@
                 </div>
             </div>
 
-            <!-- 5. Detail Sinematik -->
+            <!-- Detail Sinematik -->
             <div class="card-bg rounded-lg border border-slate-700/80">
                 <div class="glass-section-header flex items-center justify-between p-4">
                     <div class="flex items-center gap-3">
@@ -218,9 +170,7 @@
                         <option value="Rack Focus (peralihan fokus)">Rack Focus (Peralihan fokus)</option>
                     </select>
                 </div>
-                <div id="shotContainer" class="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Shot Kamera akan ditambahkan secara dinamis -->
-                </div>
+                <div id="shotContainer" class="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
                 <div class="p-5 mt-auto border-t border-slate-700/60 flex items-center gap-4">
                        <button type="button" id="addShotBtn" class="flex items-center justify-center gap-2 w-full sm:w-auto bg-yellow-600/80 hover:bg-yellow-600 text-black font-semibold py-2 px-4 rounded-md transition">
                            <i data-lucide="camera-plus" class="w-4 h-4"></i><span>Tambah Shot</span>
@@ -231,16 +181,16 @@
                 </div>
             </div>
 
-            <!-- Audio -->
+            <!-- Audio & Musik -->
             <div class="card-bg rounded-lg border border-slate-700/80">
                 <div class="glass-section-header flex items-center gap-3 p-4">
                     <i data-lucide="music-4" class="w-6 h-6 text-teal-400"></i>
                     <h2 class="text-xl font-bold text-slate-100">Audio & Musik</h2>
                 </div>
                 <div class="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
+                    <div class="relative">
                         <label for="jenisMusikLatar" class="block text-sm font-medium text-slate-300 mb-1">Jenis Musik</label>
-                        <select id="jenisMusikLatar" class="w-full p-2.5 glass-input rounded-md">
+                        <select id="jenisMusikLatar" class="w-full p-2.5 pr-10 glass-input rounded-md">
                             <option value="">Pilih Jenis</option>
                             <option value="Instrumental Dramatis">Instrumental Dramatis</option>
                             <option value="Ambient Tenang">Ambient Tenang</option>
@@ -254,6 +204,9 @@
                             <option value="Tidak Ada">Tidak Ada Musik</option>
                             <option value="Lainnya">Lainnya</option>
                         </select>
+                        <button type="button" class="gemini-btn" data-target-id="manualMusikLatar" data-prompt-type="music" title="Sarankan Musik dengan Gemini">
+                            <i data-lucide="wand-2" class="w-5 h-5 text-purple-400 hover:text-purple-300"></i>
+                        </button>
                     </div>
                     <div>
                         <label for="volumeMusikLatar" class="block text-sm font-medium text-slate-300 mb-1">Volume</label>
@@ -361,7 +314,7 @@
                         <label for="outputLanguage" class="block text-sm font-medium text-slate-300 mb-1">Bahasa Output Prompt</label>
                         <select id="outputLanguage" class="w-full p-2.5 glass-input rounded-md">
                             <option value="id">Bahasa Indonesia</option>
-                            <option value="en">English</option>
+                            <option value="en">English (via Gemini API)</option>
                         </select>
                     </div>
                 </div>
@@ -490,9 +443,12 @@
                             </div>
                             ${roleHtml}
                         </div>
-                        <div>
+                        <div class="relative">
                             <label for="deskripsiFisik${num}" class="block text-sm font-medium text-slate-300 mb-1">Deskripsi Fisik</label>
-                            <textarea id="deskripsiFisik${num}" rows="2" class="w-full p-2.5 glass-input rounded-md" placeholder="Contoh: Pria paruh baya, jas abu-abu"></textarea>
+                            <textarea id="deskripsiFisik${num}" rows="2" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Contoh: Pria paruh baya, jas abu-abu"></textarea>
+                            <button type="button" class="gemini-btn gemini-btn-textarea" data-target-id="deskripsiFisik${num}" data-prompt-type="phys_desc" title="Generate Deskripsi dengan Gemini">
+                                <i data-lucide="wand-2" class="w-4 h-4 text-purple-400 hover:text-purple-300"></i>
+                            </button>
                         </div>
                         <div>
                              <label for="sifatKarakter${num}" class="block text-sm font-medium text-slate-300 mb-1">Sifat/Kepribadian</label>
@@ -531,14 +487,20 @@
                                 <label for="waktuAksi${num}" class="block text-sm font-medium text-slate-300 mb-1">Waktu Aksi (Detik)</label>
                                 <input type="text" id="waktuAksi${num}" class="w-full p-2.5 glass-input rounded-md" placeholder="Contoh: 2s-3s">
                             </div>
-                            <div>
+                            <div class="relative">
                                 <label for="aksiPembicara${num}" class="block text-sm font-medium text-slate-300 mb-1">Aksi Pembicara</label>
-                                <textarea id="aksiPembicara${num}" rows="1" class="w-full p-2.5 glass-input rounded-md" placeholder="Contoh: Menoleh ke belakang"></textarea>
+                                <textarea id="aksiPembicara${num}" rows="1" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Contoh: Menoleh ke belakang"></textarea>
+                                <button type="button" class="gemini-btn gemini-btn-textarea" data-target-id="aksiPembicara${num}" data-prompt-type="action" title="Sarankan Aksi dengan Gemini">
+                                    <i data-lucide="wand-2" class="w-4 h-4 text-purple-400 hover:text-purple-300"></i>
+                                </button>
                             </div>
                         </div>
-                        <div>
+                        <div class="relative">
                            <label for="dialogKunci${num}" class="block text-sm font-medium text-slate-300 mb-1">Teks Dialog</label>
-                           <textarea id="dialogKunci${num}" rows="3" class="w-full p-2.5 glass-input rounded-md" placeholder="Contoh: 'Ini tidak seperti yang terlihat.'"></textarea>
+                           <textarea id="dialogKunci${num}" rows="3" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Contoh: 'Ini tidak seperti yang terlihat.'"></textarea>
+                           <button type="button" class="gemini-btn gemini-btn-textarea" data-target-id="dialogKunci${num}" data-prompt-type="dialog" title="Sarankan Dialog dengan Gemini">
+                                <i data-lucide="wand-2" class="w-4 h-4 text-purple-400 hover:text-purple-300"></i>
+                           </button>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                              <div>
@@ -926,7 +888,7 @@
 
             // --- GEMINI TRANSLATION ---
             if (outputLang === 'en') {
-                showNotification('Sedang Menerjemahkan...', 10000);
+                showNotification('Menerjemahkan dengan Gemini...', 10000);
                 try {
                     const translationPrompt = `Translate the following text to English. IMPORTANT RULE: Do not translate any text that is inside quotation marks ("..."). Keep the text inside the quotation marks in its original language. Text to translate: ${finalPrompt}`;
                     
