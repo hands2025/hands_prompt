@@ -724,18 +724,18 @@
                     lucide.createIcons();
                     return;
                 }
-                contextPrompt = `Sarankan satu deskripsi lokasi yang detail dan imajinatif (sekitar 15 kata) untuk sebuah skenario video berjudul "${title}". Fokus pada satu atau dua elemen kunci yang membangun suasana. Jawab langsung dengan deskripsinya saja.`;
+                contextPrompt = `Sarankan satu deskripsi lokasi yang sangat singkat (maksimal 10 kata) untuk skenario video berjudul "${title}". Jawab langsung dengan deskripsi lokasinya saja, tanpa kalimat pembuka.`;
             } else if (promptType === 'phys_desc') {
                 const charNum = targetId.match(/\d+/)[0];
                 const charName = document.getElementById(`namaKarakter${charNum}`).value;
                 const charPersonality = document.getElementById(`sifatKarakter${charNum}`).value;
-                contextPrompt = `Berikan satu deskripsi fisik yang detail namun ringkas (sekitar 10-15 kata) untuk karakter bernama "${charName}" yang bersifat "${charPersonality}". Sebutkan satu ciri khas yang menonjol. Langsung berikan deskripsinya saja.`;
+                contextPrompt = `Berikan satu deskripsi fisik yang sangat singkat (maksimal 8 kata) untuk karakter bernama "${charName}" yang bersifat "${charPersonality}". Langsung berikan deskripsinya saja.`;
             } else if (promptType === 'dialog') {
                 const dialogNum = targetId.match(/\d+/)[0];
                 const actionText = document.getElementById(`aksiPembicara${dialogNum}`).value;
                 const speakerName = document.getElementById(`pembicara${dialogNum}`).value;
                 const mood = document.getElementById(`moodDialog${dialogNum}`).value;
-                contextPrompt = `Buatkan satu kalimat dialog yang berkesan dan kuat untuk karakter bernama "${speakerName}" yang sedang melakukan aksi "${actionText}" dengan mood "${mood}". Dialog harus menyiratkan konteks atau perasaan yang lebih dalam. Jawab hanya dengan dialognya saja, tanpa tanda kutip.`;
+                contextPrompt = `Buatkan satu kalimat dialog yang singkat dan kuat untuk karakter bernama "${speakerName}" yang sedang melakukan aksi "${actionText}" dengan mood "${mood}". Jawab hanya dengan dialognya saja, tanpa tanda kutip atau penjelasan.`;
             }
 
             if (!contextPrompt) {
@@ -746,14 +746,10 @@
             }
             
             try {
-                const apiKey = ""; // Handled by environment
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-                const payload = { contents: [{ role: "user", parts: [{ text: contextPrompt }] }] };
-
-                const response = await fetch(apiUrl, {
+                const response = await fetch('/api/translate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ prompt: contextPrompt })
                 });
 
                 if (!response.ok) {
@@ -962,14 +958,10 @@
                 try {
                     const translationPrompt = `Translate the following text to English. IMPORTANT RULE: Do not translate any text that is inside quotation marks ("..."). Keep the text inside the quotation marks in its original language. Text to translate: ${finalPrompt}`;
                     
-                    const apiKey = ""; // Handled by environment
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-                    const payload = { contents: [{ role: "user", parts: [{ text: translationPrompt }] }] };
-                    
-                    const response = await fetch(apiUrl, {
+                    const response = await fetch('/api/translate', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
+                        body: JSON.stringify({ prompt: translationPrompt })
                     });
 
                     if (!response.ok) throw new Error(`Proxy request failed with status ${response.status}`);
