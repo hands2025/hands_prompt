@@ -747,37 +747,27 @@
             }
             
             try {
-                const apiKey = ""; // API Key is handled by the environment
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-                
-                const payload = {
-                    contents: [{
-                        role: "user",
-                        parts: [{ text: contextPrompt }]
-                    }]
-                };
-
-                const response = await fetch(apiUrl, {
+                const response = await fetch('/api/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ prompt: contextPrompt })
                 });
 
                 if (!response.ok) {
-                    throw new Error(`API request failed with status ${response.status}`);
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `API request failed with status ${response.status}`);
                 }
 
                 const result = await response.json();
 
-                if (result.candidates && result.candidates[0].content.parts[0].text) {
-                    const generatedText = result.candidates[0].content.parts[0].text;
-                    targetElement.value = generatedText.replace(/["*]/g, '').trim();
+                if (result.text) {
+                    targetElement.value = result.text.replace(/["*]/g, '').trim();
                 } else {
                     showNotification('Gagal mendapatkan respons dari Gemini.', 3000, true);
                 }
             } catch (error) {
                 console.error("Gemini Suggestion Error:", error);
-                showNotification('Terjadi kesalahan saat menghubungi API Gemini.', 3000, true);
+                showNotification(`Kesalahan API: ${error.message}`, 5000, true);
             } finally {
                 button.innerHTML = originalButtonContent;
                 button.disabled = false;
@@ -969,34 +959,27 @@
                 try {
                     const translationPrompt = `Translate the following text to English. IMPORTANT RULE: Do not translate any text that is inside quotation marks ("..."). Keep the text inside the quotation marks in its original language. Text to translate: ${finalPrompt}`;
                     
-                    const apiKey = ""; // API Key is handled by the environment
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-                    
-                    const payload = {
-                        contents: [{
-                            role: "user",
-                            parts: [{ text: translationPrompt }]
-                        }]
-                    };
-
-                    const response = await fetch(apiUrl, {
+                    const response = await fetch('/api/generate', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
+                        body: JSON.stringify({ prompt: translationPrompt })
                     });
 
-                    if (!response.ok) throw new Error(`Proxy request failed with status ${response.status}`);
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `Proxy request failed with status ${response.status}`);
+                    }
                     
                     const result = await response.json();
-                    if (result.candidates && result.candidates[0].content.parts[0].text) {
-                        finalPrompt = result.candidates[0].content.parts[0].text;
+                    if (result.text) {
+                        finalPrompt = result.text;
                         showNotification('Terjemahan selesai!', 2000);
                     } else {
-                        throw new Error('Invalid response structure from Gemini.');
+                        throw new Error('Invalid response structure from proxy.');
                     }
                 } catch (error) {
                     console.error("Gemini Translation Error:", error);
-                    showNotification('Gagal menerjemahkan. Menampilkan versi asli.', 3000, true);
+                    showNotification(`Gagal menerjemahkan: ${error.message}`, 5000, true);
                 }
             }
 
