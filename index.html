@@ -655,24 +655,23 @@
             const char2Name = getElValue('namaKarakter2') || 'Karakter 2';
             const char2Role = getElValue('peranKarakter2');
 
-            let penanyaNama;
-            let penjawabNama;
+            let penanyaNama = char1Name; // Default
+            let penjawabNama = char2Name; // Default
 
-            if (char1Role === 'Penanya') {
+            if (char1Role === 'Penanya' && char2Role === 'Penjawab') {
                 penanyaNama = char1Name;
                 penjawabNama = char2Name;
-            } else if (char1Role === 'Penjawab') {
+            } else if (char1Role === 'Penjawab' && char2Role === 'Penanya') {
                 penanyaNama = char2Name;
                 penjawabNama = char1Name;
-            } else {
-                if (char2Role === 'Penanya') {
-                    penanyaNama = char2Name;
-                    penjawabNama = char1Name;
-                } else { 
-                    penanyaNama = char1Name;
-                    penjawabNama = char2Name;
-                }
+            } else if (char1Role === 'Penanya') {
+                penanyaNama = char1Name;
+                penjawabNama = char2Name;
+            } else if (char2Role === 'Penanya') {
+                penanyaNama = char2Name;
+                penjawabNama = char1Name;
             }
+            
             return { penanyaNama, penjawabNama };
         }
 
@@ -860,8 +859,8 @@
                 let dialogTextParts = [];
                 for (let i = 0; i < dialogForms.length; i++) {
                     const num = i + 1;
-                    const speaker = (i % 2 === 0) ? penanyaNama : penjawabNama;
-                    const listener = (i % 2 === 0) ? penjawabNama : penanyaNama;
+                    const speaker = getDisplayValue(`pembicara${num}`);
+                    const listener = (speaker === penanyaNama) ? penjawabNama : penanyaNama;
                     
                     const timing = getDisplayValue(`waktuAksi${num}`);
                     const action = getDisplayValue(`aksiPembicara${num}`);
