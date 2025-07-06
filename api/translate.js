@@ -7,7 +7,6 @@ export default async function handler(request, response) {
   }
 
   // Ambil Kunci API dari Environment Variables di Vercel (Sangat Aman)
-  // 'process.env.GEMINI_API_KEY' akan membaca variabel yang Anda atur di dashboard Vercel.
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
@@ -39,15 +38,14 @@ export default async function handler(request, response) {
     });
 
     // Jika Gemini memberikan error, teruskan error tersebut
+    const geminiData = await geminiResponse.json();
     if (!geminiResponse.ok) {
-      const errorBody = await geminiResponse.text();
-      return response.status(geminiResponse.status).json({ error: `Gemini API error: ${errorBody}` });
+      const errorMessage = geminiData.error?.message || 'Unknown Gemini API error';
+      return response.status(geminiResponse.status).json({ error: `Gemini API error: ${errorMessage}` });
     }
 
-    const data = await geminiResponse.json();
-    
     // Kirim kembali respons sukses dari Gemini ke frontend
-    return response.status(200).json(data);
+    return response.status(200).json(geminiData);
 
   } catch (error) {
     // Tangani jika ada error jaringan atau lainnya
