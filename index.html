@@ -484,9 +484,9 @@
                                 <label for="waktuAksi${num}" class="block text-sm font-medium text-slate-300 mb-1">Waktu Aksi (Detik)</label>
                                 <input type="text" id="waktuAksi${num}" class="w-full p-2.5 glass-input rounded-md" placeholder="Contoh: 2s-3s">
                             </div>
-                            <div>
+                            <div class="relative">
                                 <label for="aksiPembicara${num}" class="block text-sm font-medium text-slate-300 mb-1">Aksi Pembicara</label>
-                                <textarea id="aksiPembicara${num}" rows="1" class="w-full p-2.5 glass-input rounded-md" placeholder="Contoh: Menoleh ke belakang"></textarea>
+                                <textarea id="aksiPembicara${num}" rows="1" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Contoh: Menoleh ke belakang"></textarea>
                             </div>
                         </div>
                         <div class="relative">
@@ -746,14 +746,10 @@
             }
             
             try {
-                const apiKey = ""; // Handled by environment
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-                const payload = { contents: [{ role: "user", parts: [{ text: contextPrompt }] }] };
-
-                const response = await fetch(apiUrl, {
+                const response = await fetch('/api/translate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ prompt: contextPrompt })
                 });
 
                 if (!response.ok) {
