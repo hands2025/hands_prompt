@@ -37,18 +37,23 @@ export default async function handler(request, response) {
       }),
     });
 
-    // Jika Gemini memberikan error, teruskan error tersebut
-    const geminiData = await geminiResponse.json();
+    // PERBAIKAN: Cek status respons SEBELUM mencoba parsing JSON
     if (!geminiResponse.ok) {
-      const errorMessage = geminiData.error?.message || 'Unknown Gemini API error';
-      return response.status(geminiResponse.status).json({ error: `Gemini API error: ${errorMessage}` });
+      // Jika ada error, baca respons sebagai teks untuk menghindari JSON parse error
+      const errorBody = await geminiResponse.text();
+      console.error("Gemini API Error Body:", errorBody); // Log untuk debugging di Vercel
+      return response.status(geminiResponse.status).json({ error: `Gemini API error: ${errorBody}` });
     }
 
+    // Jika respons OK, baru parse sebagai JSON
+    const geminiData = await geminiResponse.json();
+    
     // Kirim kembali respons sukses dari Gemini ke frontend
     return response.status(200).json(geminiData);
 
   } catch (error) {
     // Tangani jika ada error jaringan atau lainnya
+    console.error("Internal Server Error:", error);
     return response.status(500).json({ error: `Internal Server Error: ${error.message}` });
   }
 }
