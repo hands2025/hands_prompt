@@ -311,7 +311,7 @@
                         <label for="outputLanguage" class="block text-sm font-medium text-slate-300 mb-1">Bahasa Output Prompt</label>
                         <select id="outputLanguage" class="w-full p-2.5 glass-input rounded-md">
                             <option value="id">Bahasa Indonesia</option>
-                            <option value="en">English</option>
+                            <option value="en">English (via Gemini API)</option>
                         </select>
                     </div>
                 </div>
@@ -710,40 +710,23 @@
         }
         
         // =================================================================
-        // PERBAIKAN UTAMA: Fungsi untuk memanggil Gemini API secara langsung
+        // FUNGSI API BARU: Memanggil backend proxy di Vercel
         // =================================================================
-        async function callGeminiAPI(prompt) {
-            const apiKey = ""; // Kunci API akan di-proxy secara otomatis
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-            const payload = {
-                contents: [{
-                    role: "user",
-                    parts: [{ text: prompt }]
-                }]
-            };
-
-            const response = await fetch(apiUrl, {
+        async function callApiProxy(prompt) {
+            const response = await fetch('/api/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({ prompt: prompt })
             });
 
             if (!response.ok) {
-                const errorBody = await response.text();
-                throw new Error(`API request failed with status ${response.status}: ${errorBody}`);
+                const errorBody = await response.json();
+                const errorMessage = errorBody?.error || `Request ke server gagal dengan status ${response.status}`;
+                throw new Error(errorMessage);
             }
 
             const result = await response.json();
-            
-            if (result.candidates && result.candidates.length > 0 &&
-                result.candidates[0].content && result.candidates[0].content.parts &&
-                result.candidates[0].content.parts.length > 0) {
-                return result.candidates[0].content.parts[0].text;
-            } else {
-                console.error("Invalid response structure from Gemini:", result);
-                throw new Error('Gagal mendapatkan konten dari respons Gemini.');
-            }
+            return result.text;
         }
 
         async function generateWithGemini(button) {
@@ -760,41 +743,35 @@
             let contextPrompt = "";
             const scenarioTitle = document.getElementById('judulSkenario').value;
             
-            if (promptType === 'location') {
-                if (!scenarioTitle) {
-                    showNotification('Harap isi Judul Skenario terlebih dahulu!', 3000, true);
-                    button.innerHTML = originalButtonContent;
-                    button.disabled = false;
-                    lucide.createIcons();
-                    return;
-                }
-                contextPrompt = `Berdasarkan judul skenario video "${scenarioTitle}", berikan deskripsi lokasi yang detail dan imersif dalam satu paragraf singkat. Fokus pada atmosfer dan elemen visual kunci. Jawab langsung dengan deskripsi paragrafnya saja.`;
-            } else if (promptType === 'phys_desc') {
-                const charNum = targetId.match(/\d+/)[0];
-                const charName = document.getElementById(`namaKarakter${charNum}`).value;
-                const charPersonality = document.getElementById(`sifatKarakter${charNum}`).value;
-                contextPrompt = `Untuk karakter bernama "${charName}" dengan kepribadian "${charPersonality}", buatkan deskripsi penampilan fisik, pakaian, dan ekspresi khasnya dalam satu paragraf singkat yang detail.`;
-            } else if (promptType === 'dialog') {
-                const dialogNum = targetId.match(/\d+/)[0];
-                const actionText = document.getElementById(`aksiPembicara${dialogNum}`).value;
-                const speakerName = document.getElementById(`pembicara${dialogNum}`).value;
-                const mood = document.getElementById(`moodDialog${dialogNum}`).value;
-                contextPrompt = `Dalam skenario berjudul "${scenarioTitle}", karakter bernama "${speakerName}" (yang sedang ${actionText}) perlu mengucapkan dialog dengan mood "${mood}". Tuliskan dialog yang kuat dan bermakna untuknya dalam satu paragraf singkat. Jangan sertakan nama karakter atau tanda kutip dalam jawabanmu, hanya dialognya saja.`;
-            }
-
-            if (!contextPrompt) {
-                button.innerHTML = originalButtonContent;
-                button.disabled = false;
-                lucide.createIcons();
-                return;
-            }
-            
             try {
-                const generatedText = await callGeminiAPI(contextPrompt);
+                if (promptType === 'location') {
+                    if (!scenarioTitle) {
+                        throw new Error('Harap isi Judul Skenario terlebih dahulu!');
+                    }
+                    contextPrompt = `Berdasarkan judul skenario video "${scenarioTitle}", berikan deskripsi lokasi yang detail dan imersif dalam satu paragraf singkat. Fokus pada atmosfer dan elemen visual kunci. Jawab langsung dengan deskripsi paragrafnya saja.`;
+                } else if (promptType === 'phys_desc') {
+                    const charNum = targetId.match(/\d+/)[0];
+                    const charName = document.getElementById(`namaKarakter${charNum}`).value;
+                    const charPersonality = document.getElementById(`sifatKarakter${charNum}`).value;
+                    contextPrompt = `Untuk karakter bernama "${charName}" dengan kepribadian "${charPersonality}", buatkan deskripsi penampilan fisik, pakaian, dan ekspresi khasnya dalam satu paragraf singkat yang detail.`;
+                } else if (promptType === 'dialog') {
+                    const dialogNum = targetId.match(/\d+/)[0];
+                    const actionText = document.getElementById(`aksiPembicara${dialogNum}`).value;
+                    const speakerName = document.getElementById(`pembicara${dialogNum}`).value;
+                    const mood = document.getElementById(`moodDialog${dialogNum}`).value;
+                    contextPrompt = `Dalam skenario berjudul "${scenarioTitle}", karakter bernama "${speakerName}" (yang sedang ${actionText}) perlu mengucapkan dialog dengan mood "${mood}". Tuliskan dialog yang kuat dan bermakna untuknya dalam satu paragraf singkat. Jangan sertakan nama karakter atau tanda kutip dalam jawabanmu, hanya dialognya saja.`;
+                }
+
+                if (!contextPrompt) {
+                     throw new Error('Tipe prompt tidak valid.');
+                }
+            
+                const generatedText = await callApiProxy(contextPrompt);
                 targetElement.value = generatedText.replace(/["*]/g, '').trim();
+
             } catch (error) {
-                console.error("Gemini Suggestion Error:", error);
-                showNotification('Terjadi kesalahan saat menghubungi API Gemini.', 3000, true);
+                console.error("Proxy Suggestion Error:", error);
+                showNotification(error.message, 5000, true);
             } finally {
                 button.innerHTML = originalButtonContent;
                 button.disabled = false;
@@ -809,199 +786,200 @@
             generateBtn.innerHTML = '<div class="loader"></div><span class="ml-2">Generating...</span>';
             generateBtn.disabled = true;
 
-            const getDisplayValue = (id, defaultVal = '') => {
-                const el = document.getElementById(id);
-                if (!el) return defaultVal;
+            try {
+                const getDisplayValue = (id, defaultVal = '') => {
+                    const el = document.getElementById(id);
+                    if (!el) return defaultVal;
 
-                if (el.tagName === 'SELECT') {
-                    return el.options[el.selectedIndex].value || defaultVal;
+                    if (el.tagName === 'SELECT') {
+                        return el.options[el.selectedIndex].value || defaultVal;
+                    }
+                    return el.value.trim() || defaultVal;
+                };
+
+                const t = {
+                    main_command: "PERINTAH UTAMA: Buat video berdasarkan deskripsi naratif berikut dalam satu alur yang koheren dan patuhi semua detail peran, aksi, dan dialog.",
+                    lip_sync_command: "PERINTAH WAJIB: Pastikan gerak bibir (lip-sync) setiap karakter sinkron secara akurat dengan dialog yang diucapkan sesuai bahasa yang dipilih.",
+                    conversation_flow_command: "PERINTAH WAJIB UNTUK ALUR PERCAKAPAN: Terapkan sistem giliran bicara yang ketat. Satu karakter harus sepenuhnya diam setelah menyelesaikan dialognya. Karakter berikutnya hanya boleh mulai berbicara atau bereaksi setelah karakter pertama benar-benar berhenti.",
+                    scene_intro: (style, quality, ratio, location, time, atmosphere, lighting, dof) => `Buat sebuah video ${style} berkualitas ${quality} dengan rasio ${ratio}. Adegan berlatar di ${location} pada ${time}, menciptakan atmosfer ${atmosphere} dengan pencahayaan ${lighting} dan efek kedalaman kamera ${dof}.`,
+                    chars_intro: "Karakter yang terlibat adalah: ",
+                    char_desc: (name, desc, personality, position, role) => `${name} (${desc}, bersifat ${personality}) sebagai ${role} yang berada di posisi ${position}`,
+                    char_desc_no_role: (name, desc, personality, position) => `${name} (${desc}, bersifat ${personality}) yang berada di posisi ${position}`,
+                    interaction_intro: "Alur interaksi adalah sebagai berikut: ",
+                    dialog_turn: (timing, speaker, action, mood, accent, text, reaction, listener) => {
+                        let mainPart = (timing ? `Pada detik ${timing}, ` : '') + `${speaker} (${action}) berbicara dengan mood ${mood} (Logat: ${accent}) dan mengatakan, "${text}".`;
+                        let reactionPart = reaction ? ` Sebagai reaksi, ${listener} ${reaction}.` : '';
+                        return mainPart + reactionPart;
+                    },
+                    cinematic_intro: " Secara sinematik, gunakan gaya berikut: ",
+                    shot_desc: (type, timing) => `${type} pada durasi ${timing}`,
+                    output_duration: (duration) => ` Perkirakan durasi total video adalah ${duration}.`,
+                    audio_desc: (music, volume) => ` Iringi video dengan musik ${music} pada volume ${volume}.`,
+                    avoid_desc: " Hindari elemen-elemen berikut: ",
+                    then_connector: "Selanjutnya, ",
+                    and_connector: " dan "
+                };
+                
+                let promptParts = [];
+
+                // Main Command
+                promptParts.push(t.main_command);
+                promptParts.push(t.lip_sync_command);
+                promptParts.push(t.conversation_flow_command);
+
+                // Scene
+                promptParts.push(t.scene_intro(
+                    getDisplayValue('pilihanSinematik'), 
+                    getDisplayValue('kualitasOutput'), 
+                    getDisplayValue('aspekRasio'), 
+                    getDisplayValue('lokasiPercakapan'), 
+                    getDisplayValue('waktu'), 
+                    getDisplayValue('atmosferAwal'), 
+                    getDisplayValue('pencahayaan'),
+                    getDisplayValue('depthOfField') 
+                ));
+                
+                // Characters
+                const characterForms = document.querySelectorAll('.character-form');
+                if (characterForms.length > 0) {
+                    let charDescs = [];
+                    characterForms.forEach((form, index) => {
+                        const num = index + 1;
+                        const roleEl = document.getElementById(`peranKarakter${num}`);
+                        if (roleEl) {
+                            charDescs.push(t.char_desc(getDisplayValue(`namaKarakter${num}`), getDisplayValue(`deskripsiFisik${num}`), getDisplayValue(`sifatKarakter${num}`), getDisplayValue(`posisiKarakter${num}`), getDisplayValue(`peranKarakter${num}`)));
+                        } else {
+                            charDescs.push(t.char_desc_no_role(getDisplayValue(`namaKarakter${num}`), getDisplayValue(`deskripsiFisik${num}`), getDisplayValue(`sifatKarakter${num}`), getDisplayValue(`posisiKarakter${num}`)));
+                        }
+                    });
+                    promptParts.push(t.chars_intro + charDescs.join(t.and_connector) + ".");
                 }
-                return el.value.trim() || defaultVal;
-            };
 
-            const t = {
-                main_command: "PERINTAH UTAMA: Buat video berdasarkan deskripsi naratif berikut dalam satu alur yang koheren dan patuhi semua detail peran, aksi, dan dialog.",
-                lip_sync_command: "PERINTAH WAJIB: Pastikan gerak bibir (lip-sync) setiap karakter sinkron secara akurat dengan dialog yang diucapkan sesuai bahasa yang dipilih.",
-                conversation_flow_command: "PERINTAH WAJIB UNTUK ALUR PERCAKAPAN: Terapkan sistem giliran bicara yang ketat. Satu karakter harus sepenuhnya diam setelah menyelesaikan dialognya. Karakter berikutnya hanya boleh mulai berbicara atau bereaksi setelah karakter pertama benar-benar berhenti.",
-                scene_intro: (style, quality, ratio, location, time, atmosphere, lighting, dof) => `Buat sebuah video ${style} berkualitas ${quality} dengan rasio ${ratio}. Adegan berlatar di ${location} pada ${time}, menciptakan atmosfer ${atmosphere} dengan pencahayaan ${lighting} dan efek kedalaman kamera ${dof}.`,
-                chars_intro: "Karakter yang terlibat adalah: ",
-                char_desc: (name, desc, personality, position, role) => `${name} (${desc}, bersifat ${personality}) sebagai ${role} yang berada di posisi ${position}`,
-                char_desc_no_role: (name, desc, personality, position) => `${name} (${desc}, bersifat ${personality}) yang berada di posisi ${position}`,
-                interaction_intro: "Alur interaksi adalah sebagai berikut: ",
-                dialog_turn: (timing, speaker, action, mood, accent, text, reaction, listener) => {
-                    let mainPart = (timing ? `Pada detik ${timing}, ` : '') + `${speaker} (${action}) berbicara dengan mood ${mood} (Logat: ${accent}) dan mengatakan, "${text}".`;
-                    let reactionPart = reaction ? ` Sebagai reaksi, ${listener} ${reaction}.` : '';
-                    return mainPart + reactionPart;
-                },
-                cinematic_intro: " Secara sinematik, gunakan gaya berikut: ",
-                shot_desc: (type, timing) => `${type} pada durasi ${timing}`,
-                output_duration: (duration) => ` Perkirakan durasi total video adalah ${duration}.`,
-                audio_desc: (music, volume) => ` Iringi video dengan musik ${music} pada volume ${volume}.`,
-                avoid_desc: " Hindari elemen-elemen berikut: ",
-                then_connector: "Selanjutnya, ",
-                and_connector: " dan "
-            };
-            
-            let promptParts = [];
+                // --- Narrative Logic ---
+                let narrativeParts = [];
+                
+                const { penanyaNama, penjawabNama } = getSpeakerRoles();
 
-            // Main Command
-            promptParts.push(t.main_command);
-            promptParts.push(t.lip_sync_command);
-            promptParts.push(t.conversation_flow_command);
+                const dialogForms = document.querySelectorAll('.dialog-segment');
+                if (dialogForms.length > 0) {
+                    let dialogTextParts = [];
+                    for (let i = 0; i < dialogForms.length; i++) {
+                        const num = i + 1;
+                        const speaker = (i % 2 === 0) ? penanyaNama : penjawabNama;
+                        const listener = (i % 2 === 0) ? penjawabNama : penanyaNama;
+                        
+                        const timing = getDisplayValue(`waktuAksi${num}`);
+                        const action = getDisplayValue(`aksiPembicara${num}`);
+                        const mood = getDisplayValue(`moodDialog${num}`);
+                        const accent = getDisplayValue(`bahasaDialog${num}`);
+                        const text = getDisplayValue(`dialogKunci${num}`);
+                        const reaction = getDisplayValue(`reaksiPendengar${num}`);
 
-            // Scene
-            promptParts.push(t.scene_intro(
-                getDisplayValue('pilihanSinematik'), 
-                getDisplayValue('kualitasOutput'), 
-                getDisplayValue('aspekRasio'), 
-                getDisplayValue('lokasiPercakapan'), 
-                getDisplayValue('waktu'), 
-                getDisplayValue('atmosferAwal'), 
-                getDisplayValue('pencahayaan'),
-                getDisplayValue('depthOfField') 
-            ));
-            
-            // Characters
-            const characterForms = document.querySelectorAll('.character-form');
-            if (characterForms.length > 0) {
-                let charDescs = [];
-                characterForms.forEach((form, index) => {
-                    const num = index + 1;
-                    const roleEl = document.getElementById(`peranKarakter${num}`);
-                    if (roleEl) {
-                        charDescs.push(t.char_desc(getDisplayValue(`namaKarakter${num}`), getDisplayValue(`deskripsiFisik${num}`), getDisplayValue(`sifatKarakter${num}`), getDisplayValue(`posisiKarakter${num}`), getDisplayValue(`peranKarakter${num}`)));
+                        dialogTextParts.push(t.dialog_turn(timing, speaker, action, mood, accent, text, reaction, listener));
+                    }
+
+                    if (dialogTextParts.length > 0) {
+                        narrativeParts.push(t.interaction_intro + dialogTextParts.join(" "));
+                    }
+                }
+
+                const closingAction = getDisplayValue('closingAction');
+                if (closingAction) {
+                    const closingText = `Adegan ini diakhiri dengan ${closingAction}.`;
+                    if (narrativeParts.length > 0) {
+                        narrativeParts.push(t.then_connector + closingText);
                     } else {
-                        charDescs.push(t.char_desc_no_role(getDisplayValue(`namaKarakter${num}`), getDisplayValue(`deskripsiFisik${num}`), getDisplayValue(`sifatKarakter${num}`), getDisplayValue(`posisiKarakter${num}`)));
+                        narrativeParts.push(closingText);
                     }
-                });
-                promptParts.push(t.chars_intro + charDescs.join(t.and_connector) + ".");
-            }
-
-            // --- Narrative Logic ---
-            let narrativeParts = [];
-            
-            const { penanyaNama, penjawabNama } = getSpeakerRoles();
-
-            const dialogForms = document.querySelectorAll('.dialog-segment');
-            if (dialogForms.length > 0) {
-                let dialogTextParts = [];
-                for (let i = 0; i < dialogForms.length; i++) {
-                    const num = i + 1;
-                    const speaker = (i % 2 === 0) ? penanyaNama : penjawabNama;
-                    const listener = (i % 2 === 0) ? penjawabNama : penanyaNama;
-                    
-                    const timing = getDisplayValue(`waktuAksi${num}`);
-                    const action = getDisplayValue(`aksiPembicara${num}`);
-                    const mood = getDisplayValue(`moodDialog${num}`);
-                    const accent = getDisplayValue(`bahasaDialog${num}`);
-                    const text = getDisplayValue(`dialogKunci${num}`);
-                    const reaction = getDisplayValue(`reaksiPendengar${num}`);
-
-                    dialogTextParts.push(t.dialog_turn(timing, speaker, action, mood, accent, text, reaction, listener));
                 }
-
-                if (dialogTextParts.length > 0) {
-                    narrativeParts.push(t.interaction_intro + dialogTextParts.join(" "));
-                }
-            }
-
-            const closingAction = getDisplayValue('closingAction');
-            if (closingAction) {
-                const closingText = `Adegan ini diakhiri dengan ${closingAction}.`;
+                
                 if (narrativeParts.length > 0) {
-                    narrativeParts.push(t.then_connector + closingText);
-                } else {
-                    narrativeParts.push(closingText);
+                    promptParts.push(narrativeParts.join(''));
                 }
-            }
-            
-            if (narrativeParts.length > 0) {
-                promptParts.push(narrativeParts.join(''));
-            }
-            // --- End Narrative Logic ---
+                // --- End Narrative Logic ---
 
 
-            // Cinematics
-            const shotForms = document.querySelectorAll('.shot-segment');
-            if (shotForms.length > 0) {
-                let shotDescs = [];
-                shotForms.forEach((segment, index) => {
-                    const num = index + 1;
-                    let shotType = getDisplayValue(`shotType${num}`);
-                    if (shotType === 'Lainnya' || shotType === 'Lainnya (Manual)') {
-                         shotType = getDisplayValue(`manualShotInput${num}`);
+                // Cinematics
+                const shotForms = document.querySelectorAll('.shot-segment');
+                if (shotForms.length > 0) {
+                    let shotDescs = [];
+                    shotForms.forEach((segment, index) => {
+                        const num = index + 1;
+                        let shotType = getDisplayValue(`shotType${num}`);
+                        if (shotType === 'Lainnya' || shotType === 'Lainnya (Manual)') {
+                             shotType = getDisplayValue(`manualShotInput${num}`);
+                        }
+                        if(shotType) shotDescs.push(t.shot_desc(shotType, getDisplayValue(`shotTiming${num}`)));
+                    });
+                     if(shotDescs.length > 0) promptParts.push(t.cinematic_intro + shotDescs.join(", ") + ".");
+                }
+
+                // Duration
+                const duration = getDisplayValue('durasiKlip');
+                if(duration) {
+                    promptParts.push(t.output_duration(duration));
+                }
+
+                // Audio
+                let music = getDisplayValue('jenisMusikLatar');
+                if(music) {
+                    if (music === 'Lainnya') music = getDisplayValue('manualMusikLatar');
+                    promptParts.push(t.audio_desc(music, getDisplayValue('volumeMusikLatar')));
+                }
+
+                // Negative Prompt
+                let negativeParts = [];
+                const manualNegative = getDisplayValue('negativePrompt');
+                if (manualNegative) {
+                    negativeParts.push(manualNegative);
+                }
+
+                const negativeOptions = [
+                    {id: 'neg-no-text', text: 'PERINTAH TEGAS DAN MUTLAK: Jangan render atau tampilkan teks, tulisan, judul, subtitle, logo, atau watermark APAPUN di dalam video. Video harus benar-benar bersih dari semua elemen teks.'},
+                    {id: 'neg-no-subtitle', text: 'tidak ada subtitle'},
+                    {id: 'neg-no-logo', text: 'tidak ada logo'},
+                    {id: 'neg-no-watermark', text: 'tidak ada watermark'},
+                    {id: 'neg-no-distortion', text: 'tidak ada distorsi visual'},
+                    {id: 'neg-no-art-effects', text: 'tidak ada efek kartun, 3D, animasi'},
+                    {id: 'neg-no-translate', text: 'jangan terjemahkan dialog otomatis'},
+                    {id: 'neg-no-change-dialogue', text: 'jangan ubah kalimat dialog'}
+                ];
+
+                negativeOptions.forEach(opt => {
+                    if (document.getElementById(opt.id).checked) {
+                        negativeParts.push(opt.text);
                     }
-                    if(shotType) shotDescs.push(t.shot_desc(shotType, getDisplayValue(`shotTiming${num}`)));
                 });
-                 if(shotDescs.length > 0) promptParts.push(t.cinematic_intro + shotDescs.join(", ") + ".");
-            }
 
-            // Duration
-            const duration = getDisplayValue('durasiKlip');
-            if(duration) {
-                promptParts.push(t.output_duration(duration));
-            }
-
-            // Audio
-            let music = getDisplayValue('jenisMusikLatar');
-            if(music) {
-                if (music === 'Lainnya') music = getDisplayValue('manualMusikLatar');
-                promptParts.push(t.audio_desc(music, getDisplayValue('volumeMusikLatar')));
-            }
-
-            // Negative Prompt
-            let negativeParts = [];
-            const manualNegative = getDisplayValue('negativePrompt');
-            if (manualNegative) {
-                negativeParts.push(manualNegative);
-            }
-
-            const negativeOptions = [
-                {id: 'neg-no-text', text: 'PERINTAH TEGAS DAN MUTLAK: Jangan render atau tampilkan teks, tulisan, judul, subtitle, logo, atau watermark APAPUN di dalam video. Video harus benar-benar bersih dari semua elemen teks.'},
-                {id: 'neg-no-subtitle', text: 'tidak ada subtitle'},
-                {id: 'neg-no-logo', text: 'tidak ada logo'},
-                {id: 'neg-no-watermark', text: 'tidak ada watermark'},
-                {id: 'neg-no-distortion', text: 'tidak ada distorsi visual'},
-                {id: 'neg-no-art-effects', text: 'tidak ada efek kartun, 3D, animasi'},
-                {id: 'neg-no-translate', text: 'jangan terjemahkan dialog otomatis'},
-                {id: 'neg-no-change-dialogue', text: 'jangan ubah kalimat dialog'}
-            ];
-
-            negativeOptions.forEach(opt => {
-                if (document.getElementById(opt.id).checked) {
-                    negativeParts.push(opt.text);
+                const negative = negativeParts.join(', ');
+                if (negative) {
+                    promptParts.push(t.avoid_desc + negative);
                 }
-            });
 
-            const negative = negativeParts.join(', ');
-            if (negative) {
-                promptParts.push(t.avoid_desc + negative);
-            }
+                let finalPrompt = promptParts.join(' ');
 
-            let finalPrompt = promptParts.join(' ');
-
-            // --- GEMINI TRANSLATION (FIXED) ---
-            if (outputLang === 'en') {
-                showNotification('Sedang Menerjemahkan...', 10000);
-                try {
+                // --- GEMINI TRANSLATION ---
+                if (outputLang === 'en') {
+                    showNotification('Menerjemahkan dengan Gemini...', 10000);
                     const translationPrompt = `Translate the following text to English. IMPORTANT RULE: Do not translate any text that is inside quotation marks ("..."). Keep the text inside the quotation marks in its original language. Text to translate: ${finalPrompt}`;
                     
-                    finalPrompt = await callGeminiAPI(translationPrompt);
+                    finalPrompt = await callApiProxy(translationPrompt);
                     showNotification('Terjemahan selesai!', 2000);
-
-                } catch (error) {
-                    console.error("Gemini Translation Error:", error);
-                    showNotification('Gagal menerjemahkan. Menampilkan versi asli.', 3000, true);
                 }
-            }
 
-            generatedPromptTextarea.value = finalPrompt;
-            if (outputLang !== 'en') {
-                showNotification("Prompt berhasil dibuat!", 2000);
+                generatedPromptTextarea.value = finalPrompt;
+                if (outputLang !== 'en') {
+                    showNotification("Prompt berhasil dibuat!", 2000);
+                }
+
+            } catch (error) {
+                console.error("Prompt Generation Error:", error);
+                showNotification(error.message, 5000, true);
+            } finally {
+                generateBtn.innerHTML = originalBtnText;
+                generateBtn.disabled = false;
+                lucide.createIcons();
             }
-            generateBtn.innerHTML = originalBtnText;
-            generateBtn.disabled = false;
-            lucide.createIcons();
         }
         
         // --- EVENT LISTENERS ---
