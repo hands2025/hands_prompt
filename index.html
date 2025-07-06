@@ -53,7 +53,7 @@
                     </div>
                     <div class="relative">
                         <label for="lokasiPercakapan" class="block text-sm font-medium text-slate-300 mb-1">Lokasi</label>
-                        <textarea id="lokasiPercakapan" rows="3" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Saran: Latar + Detail Visual + Suasana + Indra Lain. Contoh: Atap gedung apartemen tua saat senja, antena TV berkarat menonjol di langit oranye, dengan angin sepoi-sepoi yang membawa suara lalu lintas dari bawah."></textarea>
+                        <textarea id="lokasiPercakapan" rows="2" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Isi judul, lalu klik ikon sihir untuk ide lokasi"></textarea>
                         <button type="button" class="gemini-btn gemini-btn-textarea" data-target-id="lokasiPercakapan" data-prompt-type="location" title="Sarankan Lokasi dengan Gemini">
                             <i data-lucide="wand-2" class="w-4 h-4 text-purple-400 hover:text-purple-300"></i>
                         </button>
@@ -442,7 +442,7 @@
                         </div>
                         <div class="relative">
                             <label for="deskripsiFisik${num}" class="block text-sm font-medium text-slate-300 mb-1">Deskripsi Fisik</label>
-                            <textarea id="deskripsiFisik${num}" rows="3" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Saran: Usia/Penampilan + Pakaian + Ciri Khas + Bahasa Tubuh. Contoh: Seorang detektif tua dengan rambut beruban acak-acakan, jas hujannya basah kuyup, matanya yang tajam terus mengamati sekeliling sambil mengetukkan jari dengan gelisah."></textarea>
+                            <textarea id="deskripsiFisik${num}" rows="2" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Contoh: Pria paruh baya, jas abu-abu"></textarea>
                             <button type="button" class="gemini-btn gemini-btn-textarea" data-target-id="deskripsiFisik${num}" data-prompt-type="phys_desc" title="Generate Deskripsi dengan Gemini">
                                 <i data-lucide="wand-2" class="w-4 h-4 text-purple-400 hover:text-purple-300"></i>
                             </button>
@@ -486,12 +486,12 @@
                             </div>
                             <div class="relative">
                                 <label for="aksiPembicara${num}" class="block text-sm font-medium text-slate-300 mb-1">Aksi Pembicara</label>
-                                <textarea id="aksiPembicara${num}" rows="1" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Contoh: Mengetuk meja / Menoleh"></textarea>
+                                <textarea id="aksiPembicara${num}" rows="1" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Contoh: Menoleh ke belakang"></textarea>
                             </div>
                         </div>
                         <div class="relative">
                            <label for="dialogKunci${num}" class="block text-sm font-medium text-slate-300 mb-1">Teks Dialog</label>
-                           <textarea id="dialogKunci${num}" rows="3" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Saran: Dialog dengan subteks (makna tersembunyi). Contoh: 'Kau terlihat baik-baik saja untuk orang yang baru kembali.' (Subteks: Aku tahu kau telah melalui sesuatu yang sulit dan aku curiga padamu)."></textarea>
+                           <textarea id="dialogKunci${num}" rows="3" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Contoh: 'Ini tidak seperti yang terlihat.'"></textarea>
                            <button type="button" class="gemini-btn gemini-btn-textarea" data-target-id="dialogKunci${num}" data-prompt-type="dialog" title="Sarankan Dialog dengan Gemini">
                                 <i data-lucide="wand-2" class="w-4 h-4 text-purple-400 hover:text-purple-300"></i>
                            </button>
@@ -724,19 +724,18 @@
                     lucide.createIcons();
                     return;
                 }
-                contextPrompt = `Buatkan deskripsi lokasi yang kaya dan imersif untuk skenario video berjudul "${title}". Sertakan detail visual yang spesifik, elemen yang membangun suasana (misalnya pencahayaan, cuaca), dan petunjuk indrawi (suara, bau). Jawab hanya dengan deskripsi lokasinya saja, tanpa kalimat pembuka, dalam satu kalimat panjang.`;
+                contextPrompt = `Sarankan satu deskripsi lokasi yang sangat singkat (maksimal 10 kata) untuk skenario video berjudul "${title}". Jawab langsung dengan deskripsi lokasinya saja, tanpa kalimat pembuka.`;
             } else if (promptType === 'phys_desc') {
                 const charNum = targetId.match(/\d+/)[0];
                 const charName = document.getElementById(`namaKarakter${charNum}`).value;
                 const charPersonality = document.getElementById(`sifatKarakter${charNum}`).value;
-                contextPrompt = `Buatkan deskripsi fisik karakter yang detail dan hidup untuk karakter bernama "${charName}" yang bersifat "${charPersonality}". Sertakan detail tentang penampilan umum, pakaian yang spesifik, ciri khas yang menonjol (seperti bekas luka atau aksesori), dan bahasa tubuh atau ekspresi yang mencerminkan kepribadiannya. Jawab hanya dengan deskripsinya saja, tanpa kalimat pembuka.`;
+                contextPrompt = `Berikan satu deskripsi fisik yang sangat singkat (maksimal 8 kata) untuk karakter bernama "${charName}" yang bersifat "${charPersonality}". Langsung berikan deskripsinya saja.`;
             } else if (promptType === 'dialog') {
                 const dialogNum = targetId.match(/\d+/)[0];
                 const actionText = document.getElementById(`aksiPembicara${dialogNum}`).value;
                 const speakerName = document.getElementById(`pembicara${dialogNum}`).value;
                 const mood = document.getElementById(`moodDialog${dialogNum}`).value;
-                const personality = document.getElementById(`sifatKarakter${dialogNum}`).value;
-                contextPrompt = `Buatkan satu kalimat dialog yang memiliki makna berlapis (subteks) untuk karakter bernama "${speakerName}" yang bersifat "${personality}" dan sedang melakukan aksi "${actionText}" dengan mood "${mood}". Dialog harus terdengar wajar di permukaan, tetapi menyiratkan niat atau emosi tersembunyi. Jawab hanya dengan dialognya saja, dalam tanda kutip, tanpa penjelasan.`;
+                contextPrompt = `Buatkan satu kalimat dialog yang singkat dan kuat untuk karakter bernama "${speakerName}" yang sedang melakukan aksi "${actionText}" dengan mood "${mood}". Jawab hanya dengan dialognya saja, tanpa tanda kutip atau penjelasan.`;
             }
 
             if (!contextPrompt) {
@@ -747,27 +746,27 @@
             }
             
             try {
-                const response = await fetch('/api/generate', {
+                const response = await fetch('/api/translate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ prompt: contextPrompt })
                 });
 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || `API request failed with status ${response.status}`);
+                    throw new Error(`API request failed with status ${response.status}`);
                 }
 
                 const result = await response.json();
 
-                if (result.text) {
-                    targetElement.value = result.text.replace(/["*]/g, '').trim();
+                if (result.candidates && result.candidates[0].content.parts[0].text) {
+                    const generatedText = result.candidates[0].content.parts[0].text;
+                    targetElement.value = generatedText.replace(/["*]/g, '').trim();
                 } else {
                     showNotification('Gagal mendapatkan respons dari Gemini.', 3000, true);
                 }
             } catch (error) {
                 console.error("Gemini Suggestion Error:", error);
-                showNotification(`Kesalahan API: ${error.message}`, 5000, true);
+                showNotification('Terjadi kesalahan saat menghubungi API Gemini.', 3000, true);
             } finally {
                 button.innerHTML = originalButtonContent;
                 button.disabled = false;
@@ -959,27 +958,24 @@
                 try {
                     const translationPrompt = `Translate the following text to English. IMPORTANT RULE: Do not translate any text that is inside quotation marks ("..."). Keep the text inside the quotation marks in its original language. Text to translate: ${finalPrompt}`;
                     
-                    const response = await fetch('/api/generate', {
+                    const response = await fetch('/api/translate', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ prompt: translationPrompt })
                     });
 
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error || `Proxy request failed with status ${response.status}`);
-                    }
+                    if (!response.ok) throw new Error(`Proxy request failed with status ${response.status}`);
                     
                     const result = await response.json();
-                    if (result.text) {
-                        finalPrompt = result.text;
+                    if (result.candidates && result.candidates[0].content.parts[0].text) {
+                        finalPrompt = result.candidates[0].content.parts[0].text;
                         showNotification('Terjemahan selesai!', 2000);
                     } else {
                         throw new Error('Invalid response structure from proxy.');
                     }
                 } catch (error) {
                     console.error("Gemini Translation Error:", error);
-                    showNotification(`Gagal menerjemahkan: ${error.message}`, 5000, true);
+                    showNotification('Gagal menerjemahkan. Menampilkan versi asli.', 3000, true);
                 }
             }
 
@@ -1105,83 +1101,3 @@
     </script>
 </body>
 </html>
-```
-
-
-### Panduan Menyiapkan Backend Proxy di Vercel
-
-Untuk membuat fungsi AI di situs web Anda berfungsi, Anda perlu membuat *backend proxy* untuk menangani Kunci API Anda dengan aman. Ikuti langkah-langkah ini:
-
-#### 1. Buat Fail Serverless Function
-
-Di dalam direktori root proyek Anda, buat folder baru bernama `api`. Di dalam folder `api` tersebut, buat fail baru bernama `generate.js`.
-
-#### 2. Tambahkan Kod ke `generate.js`
-
-Salin dan tampal kod Node.js berikut ke dalam fail `api/generate.js` Anda:
-
-```javascript
-export default async function handler(req, res) {
-  // Hanya izinkan permintaan POST
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
-
-  const { prompt } = req.body;
-
-  if (!prompt) {
-    return res.status(400).json({ error: 'Prompt is required' });
-  }
-
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return res.status(500).json({ error: 'API key not configured on server' });
-  }
-
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-  const payload = {
-    contents: [{
-      role: "user",
-      parts: [{ text: prompt }]
-    }]
-  };
-
-  try {
-    const apiResponse = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!apiResponse.ok) {
-      const errorBody = await apiResponse.text();
-      console.error('Gemini API Error:', errorBody);
-      return res.status(apiResponse.status).json({ error: `Gemini API error: ${apiResponse.statusText}` });
-    }
-
-    const data = await apiResponse.json();
-    
-    // Kirim kembali teks yang dihasilkan ke frontend
-    res.status(200).json({ text: data.candidates[0].content.parts[0].text });
-
-  } catch (error) {
-    console.error('Internal Server Error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-}
-```
-
-#### 3. Dapatkan dan Simpan Kunci API Anda
-
-1.  Pergi ke [Google AI Studio](https://aistudio.google.com/) untuk mendapatkan Kunci API Gemini Anda.
-2.  Di dasbor proyek Vercel Anda, pergi ke **Settings** -> **Environment Variables**.
-3.  Buat pemboleh ubah baru dengan nama `GEMINI_API_KEY`.
-4.  Tampal Kunci API Anda ke dalam ruangan nilai (*value*).
-5.  Pastikan untuk menyimpan perubahan.
-
-#### 4. Deploy Semula
-
-Setelah menyimpan Kunci API dan menambahkan fail `api/generate.js`, deploy semula (*redeploy*) proyek Anda di Vercel. Fungsi AI di situs web Anda sekarang seharusnya berfungsi dengan baik dan am
