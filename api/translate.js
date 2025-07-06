@@ -1,56 +1,64 @@
-// /api/translate.js
+// File: api/generate.js
+// This is a Vercel Serverless Function that acts as a secure proxy.
 
 export default async function handler(request, response) {
-  // Hanya izinkan metode POST untuk keamanan
+  // Hanya izinkan metode POST
   if (request.method !== 'POST') {
+    response.setHeader('Allow', ['POST']);
     return response.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  // Ambil Kunci API dari Environment Variables di Vercel (Sangat Aman)
-  // 'process.env.GEMINI_API_KEY' akan membaca variabel yang Anda atur di dashboard Vercel.
+  const { prompt } = request.body;
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
-    return response.status(500).json({ error: 'API key not configured on the server.' });
+    console.error('GEMINI_API_KEY environment variable not set.');
+    return response.status(500).json({ error: 'Kunci API tidak dikonfigurasi di server.' });
   }
-
-  // Ambil prompt yang dikirim dari file index.html
-  const { prompt } = request.body;
-
   if (!prompt) {
-    return response.status(400).json({ error: 'No prompt provided in the request.' });
+    return response.status(400).json({ error: 'Prompt dibutuhkan.' });
   }
 
   const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-  
+  const payload = {
+    contents: [{
+      role: "user",
+      parts: [{ text: prompt }]
+    }]
+  };
+
   try {
-    // Teruskan permintaan ke API Gemini yang sebenarnya
     const geminiResponse = await fetch(apiUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          role: 'user',
-          parts: [{ text: prompt }]
-        }]
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
     });
 
-    // Jika Gemini memberikan error, teruskan error tersebut
+    // PERBAIKAN: Selalu coba baca respons sebagai JSON untuk mendapatkan detail error
+    const data = await geminiResponse.json();
+
+    // Periksa apakah respons dari Gemini tidak berhasil
     if (!geminiResponse.ok) {
-      const errorBody = await geminiResponse.text();
-      return response.status(geminiResponse.status).json({ error: `Gemini API error: ${errorBody}` });
+      console.error('Gemini API Error:', data);
+      const errorMessage = data?.error?.message || 'Gagal mengambil data dari Gemini API.';
+      return response.status(geminiResponse.status).json({ 
+        error: errorMessage
+      });
     }
 
-    const data = await geminiResponse.json();
+    // Ekstrak teks jika berhasil
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!text) {
+        console.error('Invalid response structure from Gemini:', data);
+        return response.status(500).json({ error: 'Struktur respons dari Gemini tidak valid.' });
+    }
     
-    // Kirim kembali respons sukses dari Gemini ke frontend
-    return response.status(200).json(data);
+    // Kirim teks kembali ke frontend
+    return response.status(200).json({ text: text });
 
   } catch (error) {
-    // Tangani jika ada error jaringan atau lainnya
-    return response.status(500).json({ error: `Internal Server Error: ${error.message}` });
+    console.error('Internal Server Error:', error);
+    return response.status(500).json({ error: 'Terjadi kesalahan internal pada server.', details: error.message });
   }
 }
