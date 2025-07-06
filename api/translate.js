@@ -2,7 +2,21 @@
 // This is a Vercel Serverless Function that acts as a secure proxy.
 
 export default async function handler(request, response) {
-  // Hanya izinkan metode POST
+  // Set CORS headers to allow requests from any origin
+  response.setHeader('Access-Control-Allow-Credentials', true);
+  response.setHeader('Access-Control-Allow-Origin', '*');
+  response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  response.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type'
+  );
+
+  // Handle OPTIONS request for preflight (sent by browser before POST)
+  if (request.method === 'OPTIONS') {
+    return response.status(200).end();
+  }
+
+  // Only allow POST method for actual requests
   if (request.method !== 'POST') {
     response.setHeader('Allow', ['POST']);
     return response.status(405).json({ error: 'Method Not Allowed' });
@@ -34,10 +48,8 @@ export default async function handler(request, response) {
       body: JSON.stringify(payload),
     });
 
-    // PERBAIKAN: Selalu coba baca respons sebagai JSON untuk mendapatkan detail error
     const data = await geminiResponse.json();
 
-    // Periksa apakah respons dari Gemini tidak berhasil
     if (!geminiResponse.ok) {
       console.error('Gemini API Error:', data);
       const errorMessage = data?.error?.message || 'Gagal mengambil data dari Gemini API.';
@@ -46,7 +58,6 @@ export default async function handler(request, response) {
       });
     }
 
-    // Ekstrak teks jika berhasil
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!text) {
@@ -54,7 +65,6 @@ export default async function handler(request, response) {
         return response.status(500).json({ error: 'Struktur respons dari Gemini tidak valid.' });
     }
     
-    // Kirim teks kembali ke frontend
     return response.status(200).json({ text: text });
 
   } catch (error) {
