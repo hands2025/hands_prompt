@@ -411,8 +411,8 @@
                     <div>
                         <label for="peranKarakter${num}" class="block text-sm font-medium text-slate-300 mb-1">Peran Utama</label>
                         <select id="peranKarakter${num}" class="w-full p-2.5 glass-input rounded-md">
-                            <option value="Penanya">Penanya</option>
-                            <option value="Penjawab">Penjawab</option>
+                            <option value="Penanya" ${num === 1 ? 'selected' : ''}>Penanya</option>
+                            <option value="Penjawab" ${num === 2 ? 'selected' : ''}>Penjawab</option>
                         </select>
                     </div>
                 `;
