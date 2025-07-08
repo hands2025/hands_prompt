@@ -25,13 +25,24 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .gemini-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); }
         .gemini-btn-textarea { right: 8px; top: 8px; transform: none; }
+        
+        .animate-rainbow {
+            background-size: 400% 400%;
+            animation: rainbow 8s ease infinite;
+        }
+
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
     </style>
 </head>
 <body class="p-4 md:p-8 bg-slate-950">
     <div class="glass-panel text-slate-200 p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-4xl mx-auto">
         
         <div class="text-center mb-10">
-            <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-2">
+            <h1 class="animate-rainbow text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 mb-2">
                 Generator Prompt by Handiks
             </h1>
             <p class="text-slate-400 text-lg">Rancang skenario video AI Anda dengan presisi tinggi.</p>
@@ -53,7 +64,7 @@
                     </div>
                     <div class="relative">
                         <label for="lokasiPercakapan" class="block text-sm font-medium text-slate-300 mb-1">Lokasi</label>
-                        <textarea id="lokasiPercakapan" rows="3" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Saran: Latar + Detail Visual + Suasana + Indra Lain. Contoh: Atap gedung apartemen tua saat senja, antena TV berkarat menonjol di langit oranye, dengan angin sepoi-sepoi yang membawa suara lalu lintas dari bawah."></textarea>
+                        <textarea id="lokasiPercakapan" rows="2" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Isi judul, lalu klik ikon sihir untuk ide lokasi"></textarea>
                         <button type="button" class="gemini-btn gemini-btn-textarea" data-target-id="lokasiPercakapan" data-prompt-type="location" title="Sarankan Lokasi dengan Gemini">
                             <i data-lucide="wand-2" class="w-4 h-4 text-purple-400 hover:text-purple-300"></i>
                         </button>
@@ -411,8 +422,8 @@
                     <div>
                         <label for="peranKarakter${num}" class="block text-sm font-medium text-slate-300 mb-1">Peran Utama</label>
                         <select id="peranKarakter${num}" class="w-full p-2.5 glass-input rounded-md">
-                            <option value="Penanya" ${num === 1 ? 'selected' : ''}>Penanya</option>
-                            <option value="Penjawab" ${num === 2 ? 'selected' : ''}>Penjawab</option>
+                            <option value="Penanya">Penanya</option>
+                            <option value="Penjawab">Penjawab</option>
                         </select>
                     </div>
                 `;
@@ -442,7 +453,7 @@
                         </div>
                         <div class="relative">
                             <label for="deskripsiFisik${num}" class="block text-sm font-medium text-slate-300 mb-1">Deskripsi Fisik</label>
-                            <textarea id="deskripsiFisik${num}" rows="3" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Saran: Usia/Penampilan + Pakaian + Ciri Khas + Bahasa Tubuh. Contoh: Seorang detektif tua dengan rambut beruban acak-acakan, jas hujannya basah kuyup, matanya yang tajam terus mengamati sekeliling sambil mengetukkan jari dengan gelisah."></textarea>
+                            <textarea id="deskripsiFisik${num}" rows="2" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Contoh: Pria paruh baya, jas abu-abu"></textarea>
                             <button type="button" class="gemini-btn gemini-btn-textarea" data-target-id="deskripsiFisik${num}" data-prompt-type="phys_desc" title="Generate Deskripsi dengan Gemini">
                                 <i data-lucide="wand-2" class="w-4 h-4 text-purple-400 hover:text-purple-300"></i>
                             </button>
@@ -486,12 +497,12 @@
                             </div>
                             <div class="relative">
                                 <label for="aksiPembicara${num}" class="block text-sm font-medium text-slate-300 mb-1">Aksi Pembicara</label>
-                                <textarea id="aksiPembicara${num}" rows="1" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Contoh: Mengetuk meja / Menoleh"></textarea>
+                                <textarea id="aksiPembicara${num}" rows="1" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Contoh: Menoleh ke belakang"></textarea>
                             </div>
                         </div>
                         <div class="relative">
                            <label for="dialogKunci${num}" class="block text-sm font-medium text-slate-300 mb-1">Teks Dialog</label>
-                           <textarea id="dialogKunci${num}" rows="3" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Saran: Dialog dengan subteks (makna tersembunyi). Contoh: 'Kau terlihat baik-baik saja untuk orang yang baru kembali.' (Subteks: Aku tahu kau telah melalui sesuatu yang sulit dan aku curiga padamu)."></textarea>
+                           <textarea id="dialogKunci${num}" rows="3" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Contoh: 'Ini tidak seperti yang terlihat.'"></textarea>
                            <button type="button" class="gemini-btn gemini-btn-textarea" data-target-id="dialogKunci${num}" data-prompt-type="dialog" title="Sarankan Dialog dengan Gemini">
                                 <i data-lucide="wand-2" class="w-4 h-4 text-purple-400 hover:text-purple-300"></i>
                            </button>
@@ -655,23 +666,24 @@
             const char2Name = getElValue('namaKarakter2') || 'Karakter 2';
             const char2Role = getElValue('peranKarakter2');
 
-            let penanyaNama = char1Name; // Default
-            let penjawabNama = char2Name; // Default
+            let penanyaNama;
+            let penjawabNama;
 
-            if (char1Role === 'Penanya' && char2Role === 'Penjawab') {
+            if (char1Role === 'Penanya') {
                 penanyaNama = char1Name;
                 penjawabNama = char2Name;
-            } else if (char1Role === 'Penjawab' && char2Role === 'Penanya') {
+            } else if (char1Role === 'Penjawab') {
                 penanyaNama = char2Name;
                 penjawabNama = char1Name;
-            } else if (char1Role === 'Penanya') {
-                penanyaNama = char1Name;
-                penjawabNama = char2Name;
-            } else if (char2Role === 'Penanya') {
-                penanyaNama = char2Name;
-                penjawabNama = char1Name;
+            } else {
+                if (char2Role === 'Penanya') {
+                    penanyaNama = char2Name;
+                    penjawabNama = char1Name;
+                } else { 
+                    penanyaNama = char1Name;
+                    penjawabNama = char2Name;
+                }
             }
-            
             return { penanyaNama, penjawabNama };
         }
 
@@ -723,19 +735,18 @@
                     lucide.createIcons();
                     return;
                 }
-                contextPrompt = `Buatkan deskripsi lokasi yang kaya dan imersif untuk skenario video berjudul "${title}". Sertakan detail visual yang spesifik, elemen yang membangun suasana (misalnya pencahayaan, cuaca), dan petunjuk indrawi (suara, bau). Jawab hanya dengan deskripsi lokasinya saja, tanpa kalimat pembuka, dalam satu kalimat panjang yang relevan.`;
+                contextPrompt = `Sarankan satu deskripsi lokasi yang detail dan imajinatif dalam satu paragraf singkat (sekitar 15-25 kata) untuk sebuah skenario video berjudul "${title}". Fokus pada satu atau dua elemen kunci yang membangun suasana. Jawab langsung dengan deskripsinya saja.`;
             } else if (promptType === 'phys_desc') {
                 const charNum = targetId.match(/\d+/)[0];
                 const charName = document.getElementById(`namaKarakter${charNum}`).value;
                 const charPersonality = document.getElementById(`sifatKarakter${charNum}`).value;
-                contextPrompt = `Buatkan deskripsi fisik karakter yang detail dan hidup untuk karakter bernama "${charName}" yang bersifat "${charPersonality}". Sertakan detail tentang penampilan umum, pakaian yang spesifik, ciri khas yang menonjol (seperti bekas luka atau aksesori), dan bahasa tubuh atau ekspresi yang mencerminkan kepribadiannya. Jawab hanya dengan deskripsinya saja, tanpa kalimat pembuka.`;
+                contextPrompt = `Berikan satu deskripsi fisik yang detail namun ringkas dalam satu paragraf singkat (sekitar 15-20 kata) untuk karakter bernama "${charName}" yang bersifat "${charPersonality}". Sebutkan satu ciri khas yang menonjol. Langsung berikan deskripsinya saja.`;
             } else if (promptType === 'dialog') {
                 const dialogNum = targetId.match(/\d+/)[0];
                 const actionText = document.getElementById(`aksiPembicara${dialogNum}`).value;
                 const speakerName = document.getElementById(`pembicara${dialogNum}`).value;
                 const mood = document.getElementById(`moodDialog${dialogNum}`).value;
-                const personality = document.getElementById(`sifatKarakter${dialogNum}`).value;
-                contextPrompt = `Buatkan satu kalimat dialog yang memiliki makna berlapis (subteks) untuk karakter bernama "${speakerName}" yang bersifat "${personality}" dan sedang melakukan aksi "${actionText}" dengan mood "${mood}". Dialog harus terdengar wajar di permukaan, tetapi menyiratkan niat atau emosi tersembunyi. Jawab hanya dengan dialognya saja, dalam tanda kutip, tanpa penjelasan.`;
+                contextPrompt = `Buatkan satu kalimat dialog yang berkesan dan kuat untuk karakter bernama "${speakerName}" yang sedang melakukan aksi "${actionText}" dengan mood "${mood}". Dialog harus menyiratkan konteks atau perasaan yang lebih dalam. Jawab hanya dengan dialognya saja, tanpa tanda kutip.`;
             }
 
             if (!contextPrompt) {
@@ -746,27 +757,27 @@
             }
             
             try {
-                const response = await fetch('/api/generate', {
+                const response = await fetch('/api/translate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ prompt: contextPrompt })
                 });
 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || `API request failed with status ${response.status}`);
+                    throw new Error(`API request failed with status ${response.status}`);
                 }
 
                 const result = await response.json();
 
-                if (result.text) {
-                    targetElement.value = result.text.replace(/["*]/g, '').trim();
+                if (result.candidates && result.candidates[0].content.parts[0].text) {
+                    const generatedText = result.candidates[0].content.parts[0].text;
+                    targetElement.value = generatedText.replace(/["*]/g, '').trim();
                 } else {
                     showNotification('Gagal mendapatkan respons dari Gemini.', 3000, true);
                 }
             } catch (error) {
                 console.error("Gemini Suggestion Error:", error);
-                showNotification(`Kesalahan API: ${error.message}`, 5000, true);
+                showNotification('Terjadi kesalahan saat menghubungi API Gemini.', 3000, true);
             } finally {
                 button.innerHTML = originalButtonContent;
                 button.disabled = false;
@@ -859,8 +870,8 @@
                 let dialogTextParts = [];
                 for (let i = 0; i < dialogForms.length; i++) {
                     const num = i + 1;
-                    const speaker = getDisplayValue(`pembicara${num}`);
-                    const listener = (speaker === penanyaNama) ? penjawabNama : penanyaNama;
+                    const speaker = (i % 2 === 0) ? penanyaNama : penjawabNama;
+                    const listener = (i % 2 === 0) ? penjawabNama : penanyaNama;
                     
                     const timing = getDisplayValue(`waktuAksi${num}`);
                     const action = getDisplayValue(`aksiPembicara${num}`);
@@ -958,27 +969,24 @@
                 try {
                     const translationPrompt = `Translate the following text to English. IMPORTANT RULE: Do not translate any text that is inside quotation marks ("..."). Keep the text inside the quotation marks in its original language. Text to translate: ${finalPrompt}`;
                     
-                    const response = await fetch('/api/generate', {
+                    const response = await fetch('/api/translate', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ prompt: translationPrompt })
                     });
 
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error || `Proxy request failed with status ${response.status}`);
-                    }
+                    if (!response.ok) throw new Error(`Proxy request failed with status ${response.status}`);
                     
                     const result = await response.json();
-                    if (result.text) {
-                        finalPrompt = result.text;
+                    if (result.candidates && result.candidates[0].content.parts[0].text) {
+                        finalPrompt = result.candidates[0].content.parts[0].text;
                         showNotification('Terjemahan selesai!', 2000);
                     } else {
                         throw new Error('Invalid response structure from proxy.');
                     }
                 } catch (error) {
                     console.error("Gemini Translation Error:", error);
-                    showNotification(`Gagal menerjemahkan: ${error.message}`, 5000, true);
+                    showNotification('Gagal menerjemahkan. Menampilkan versi asli.', 3000, true);
                 }
             }
 
