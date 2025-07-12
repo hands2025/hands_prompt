@@ -1,11 +1,11 @@
 {
-  "name": "hands_prompt",
+  "name": "generator-prompt-handiks",
   "version": "1.0.0",
-  "main": "server.js",
+  "description": "Aplikasi untuk membuat prompt skenario video AI.",
+  "main": "index.html",
   "scripts": {
-    "start": "node server.js"
+    "start": "echo 'Tidak ada perintah start khusus, cukup deploy ke Vercel.'"
   },
-  "dependencies": {
-    "express": "^4.18.2"
-  }
+  "author": "Handiks",
+  "license": "ISC"
 }

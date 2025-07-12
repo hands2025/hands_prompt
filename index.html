@@ -60,14 +60,17 @@
                 <div class="p-5 space-y-4">
                     <div>
                         <label for="judulSkenario" class="block text-sm font-medium text-slate-300 mb-1">Judul Skenario</label>
-                        <input type="text" id="judulSkenario" class="w-full p-2.5 glass-input rounded-md" placeholder="Contoh: Wawancara Eksklusif">
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="judulSkenario" class="w-full p-2.5 glass-input rounded-md" placeholder="Ketik judul, lalu klik tombol di samping...">
+                            <button type="button" id="generateStoryBtn" class="flex-shrink-0 flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-4 rounded-lg shadow-lg transition duration-300">
+                                <i data-lucide="box" class="w-5 h-5"></i>
+                                <span>Ide Cerita AI</span>
+                            </button>
+                        </div>
                     </div>
-                    <div class="relative">
+                    <div>
                         <label for="lokasiPercakapan" class="block text-sm font-medium text-slate-300 mb-1">Lokasi</label>
-                        <textarea id="lokasiPercakapan" rows="2" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Isi judul, lalu klik ikon sihir untuk ide lokasi"></textarea>
-                        <button type="button" class="gemini-btn gemini-btn-textarea" data-target-id="lokasiPercakapan" data-prompt-type="location" title="Sarankan Lokasi dengan Gemini">
-                            <i data-lucide="wand-2" class="w-4 h-4 text-purple-400 hover:text-purple-300"></i>
-                        </button>
+                        <textarea id="lokasiPercakapan" rows="2" class="w-full p-2.5 glass-input rounded-md" placeholder="Contoh: Sebuah kafe modern di pusat kota..."></textarea>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
@@ -160,7 +163,7 @@
                 </div>
                 <div class="p-5">
                     <label for="closingAction" class="block text-sm font-medium text-slate-300 mb-1">Deskripsi Aksi Penutup</label>
-                    <textarea id="closingAction" rows="3" class="w-full p-2.5 glass-input rounded-md" placeholder="Contoh: Kamera perlahan menjauh (zoom out), menampilkan kedua karakter yang akhirnya tersenyum. Fade to black."></textarea>
+                    <textarea id="closingAction" rows="3" class="w-full p-2.5 glass-input rounded-md" placeholder="Contoh: Karakter utama tersenyum tipis..."></textarea>
                 </div>
             </div>
 
@@ -244,10 +247,6 @@
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 pt-2">
                         <label class="flex items-center space-x-2 text-slate-300 cursor-pointer">
-                            <input type="checkbox" id="neg-no-text" class="negative-checkbox w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-600 ring-offset-gray-800 focus:ring-2">
-                            <span class="font-semibold">PERINTAH TEGAS: JANGAN RENDER TEKS APAPUN</span>
-                        </label>
-                        <label class="flex items-center space-x-2 text-slate-300 cursor-pointer">
                             <input type="checkbox" id="neg-no-subtitle" class="negative-checkbox w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-600 ring-offset-gray-800 focus:ring-2">
                             <span>Tidak ada subtitle</span>
                         </label>
@@ -279,7 +278,7 @@
                 </div>
             </div>
 
-            <!-- Pengaturan Output (DIPINDAHKAN) -->
+            <!-- Pengaturan Output -->
             <div class="card-bg rounded-lg border border-slate-700/80">
                  <div class="glass-section-header flex items-center gap-3 p-4">
                     <i data-lucide="film" class="w-6 h-6 text-purple-400"></i>
@@ -373,6 +372,7 @@
         const copyMessage = document.getElementById('copyMessage');
         const resetFormBtn = document.getElementById('resetFormBtn');
         const notificationArea = document.getElementById('notification-area');
+        const generateStoryBtn = document.getElementById('generateStoryBtn');
 
         // Character elements
         const characterContainer = document.getElementById('characterContainer');
@@ -451,12 +451,9 @@
                             </div>
                             ${roleHtml}
                         </div>
-                        <div class="relative">
+                        <div>
                             <label for="deskripsiFisik${num}" class="block text-sm font-medium text-slate-300 mb-1">Deskripsi Fisik</label>
-                            <textarea id="deskripsiFisik${num}" rows="2" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Contoh: Pria paruh baya, jas abu-abu"></textarea>
-                            <button type="button" class="gemini-btn gemini-btn-textarea" data-target-id="deskripsiFisik${num}" data-prompt-type="phys_desc" title="Generate Deskripsi dengan Gemini">
-                                <i data-lucide="wand-2" class="w-4 h-4 text-purple-400 hover:text-purple-300"></i>
-                            </button>
+                            <textarea id="deskripsiFisik${num}" rows="2" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Contoh: Pria, 30-an, memakai kemeja..."></textarea>
                         </div>
                         <div>
                              <label for="sifatKarakter${num}" class="block text-sm font-medium text-slate-300 mb-1">Sifat/Kepribadian</label>
@@ -495,17 +492,14 @@
                                 <label for="waktuAksi${num}" class="block text-sm font-medium text-slate-300 mb-1">Waktu Aksi (Detik)</label>
                                 <input type="text" id="waktuAksi${num}" class="w-full p-2.5 glass-input rounded-md" placeholder="Contoh: 2s-3s">
                             </div>
-                            <div class="relative">
+                            <div>
                                 <label for="aksiPembicara${num}" class="block text-sm font-medium text-slate-300 mb-1">Aksi Pembicara</label>
-                                <textarea id="aksiPembicara${num}" rows="1" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Contoh: Menoleh ke belakang"></textarea>
+                                <textarea id="aksiPembicara${num}" rows="1" class="w-full p-2.5 glass-input rounded-md" placeholder="Contoh: Mengangguk sambil tersenyum..."></textarea>
                             </div>
                         </div>
-                        <div class="relative">
+                        <div>
                            <label for="dialogKunci${num}" class="block text-sm font-medium text-slate-300 mb-1">Teks Dialog</label>
-                           <textarea id="dialogKunci${num}" rows="3" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Contoh: 'Ini tidak seperti yang terlihat.'"></textarea>
-                           <button type="button" class="gemini-btn gemini-btn-textarea" data-target-id="dialogKunci${num}" data-prompt-type="dialog" title="Sarankan Dialog dengan Gemini">
-                                <i data-lucide="wand-2" class="w-4 h-4 text-purple-400 hover:text-purple-300"></i>
-                           </button>
+                           <textarea id="dialogKunci${num}" rows="3" class="w-full p-2.5 glass-input rounded-md" placeholder="Tuliskan dialog di sini..."></textarea>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                              <div>
@@ -537,7 +531,7 @@
                         </div>
                         <div>
                            <label for="reaksiPendengar${num}" class="block text-sm font-medium text-slate-300 mb-1">Reaksi Pendengar</label>
-                           <textarea id="reaksiPendengar${num}" rows="2" class="w-full p-2.5 glass-input rounded-md" placeholder="Contoh: Karakter lain terlihat terkejut"></textarea>
+                           <textarea id="reaksiPendengar${num}" rows="2" class="w-full p-2.5 glass-input rounded-md" placeholder="Contoh: Terlihat bingung dan mengernyit..."></textarea>
                         </div>
                     </div>
                 </div>`;
@@ -713,71 +707,92 @@
             });
         }
         
-        async function generateWithGemini(button) {
-            const targetId = button.dataset.targetId;
-            const promptType = button.dataset.promptType;
-            const targetElement = document.getElementById(targetId);
+        async function callAPIFunction(prompt) {
+            const response = await fetch('/api/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ prompt }),
+            });
 
-            if (!targetElement) return;
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Request to API function failed');
+            }
 
+            return response.json();
+        }
+
+        async function generateStoryWithAI() {
+            const title = document.getElementById('judulSkenario').value;
+            const duration = document.getElementById('durasiKlip').value || "15-20 detik"; // Default duration
+
+            if (!title) {
+                showNotification('Harap isi Judul Skenario terlebih dahulu!', 3000, true);
+                return;
+            }
+
+            const button = document.getElementById('generateStoryBtn');
             const originalButtonContent = button.innerHTML;
             button.innerHTML = '<div class="loader"></div>';
             button.disabled = true;
+            showNotification('AI sedang membuat cerita...', 10000);
 
-            let contextPrompt = "";
-            
-            if (promptType === 'location') {
-                const title = document.getElementById('judulSkenario').value;
-                if (!title) {
-                    showNotification('Harap isi Judul Skenario terlebih dahulu!', 3000, true);
-                    button.innerHTML = originalButtonContent;
-                    button.disabled = false;
-                    lucide.createIcons();
-                    return;
-                }
-                contextPrompt = `Sarankan satu deskripsi lokasi yang detail dan imajinatif dalam satu paragraf singkat (sekitar 15-25 kata) untuk sebuah skenario video berjudul "${title}". Fokus pada satu atau dua elemen kunci yang membangun suasana. Jawab langsung dengan deskripsinya saja.`;
-            } else if (promptType === 'phys_desc') {
-                const charNum = targetId.match(/\d+/)[0];
-                const charName = document.getElementById(`namaKarakter${charNum}`).value;
-                const charPersonality = document.getElementById(`sifatKarakter${charNum}`).value;
-                contextPrompt = `Berikan satu deskripsi fisik yang detail namun ringkas dalam satu paragraf singkat (sekitar 15-20 kata) untuk karakter bernama "${charName}" yang bersifat "${charPersonality}". Sebutkan satu ciri khas yang menonjol. Langsung berikan deskripsinya saja.`;
-            } else if (promptType === 'dialog') {
-                const dialogNum = targetId.match(/\d+/)[0];
-                const actionText = document.getElementById(`aksiPembicara${dialogNum}`).value;
-                const speakerName = document.getElementById(`pembicara${dialogNum}`).value;
-                const mood = document.getElementById(`moodDialog${dialogNum}`).value;
-                contextPrompt = `Buatkan satu kalimat dialog yang berkesan dan kuat untuk karakter bernama "${speakerName}" yang sedang melakukan aksi "${actionText}" dengan mood "${mood}". Dialog harus menyiratkan konteks atau perasaan yang lebih dalam. Jawab hanya dengan dialognya saja, tanpa tanda kutip.`;
-            }
-
-            if (!contextPrompt) {
-                button.innerHTML = originalButtonContent;
-                button.disabled = false;
-                lucide.createIcons();
-                return;
-            }
+            const prompt = `Buatkan sebuah skenario video singkat yang koheren berdasarkan judul: "${title}". Total durasi video adalah sekitar ${duration}. Pastikan alur cerita dan dialog bisa selesai secara alami dalam durasi tersebut. Skenario harus mencakup 2 karakter (penanya dan penjawab) dan 2 giliran dialog. Berikan jawaban dalam format JSON yang valid dan HANYA JSON, tanpa markdown atau penjelasan lain. Gunakan struktur ini: {"location": "deskripsi lokasi detail (20-30 kata)", "atmosphere": "salah satu dari [Netral, Tegang, Senang / Gembira, Sedih / Melankolis, Misterius, Romantis, Penuh Energi, Tenang / Damai, Menakutkan, Komedi / Lucu, Epik / Megah]", "lighting": "salah satu dari [Low Key (Dramatis), High Key (Cerah), Golden Hour, Cahaya Alami, Blue Hour, Backlight, Pencahayaan Rembrandt, Cahaya Keras, Cahaya Lembut, Cahaya Neon]", "characters": [{"name": "nama karakter 1", "description": "deskripsi fisik detail (15-20 kata)", "personality": "salah satu dari [Netral, Tegas, Ceria, Misterius, Baik Hati, Pemalu, Pintar, Jenaka, Sabar, Pemberani, Cemas, Sombong, Bijaksana, Licik]"}, {"name": "nama karakter 2", "description": "deskripsi fisik detail (15-20 kata)", "personality": "salah satu dari [Netral, Tegas, Ceria, Misterius, Baik Hati, Pemalu, Pintar, Jenaka, Sabar, Pemberani, Cemas, Sombong, Bijaksana, Licik]"}], "dialogue_turns": [{"speaker_action": "aksi pembicara 1", "dialogue_text": "dialog pembicara 1", "listener_reaction": "reaksi pendengar terhadap dialog 1"}, {"speaker_action": "aksi pembicara 2", "dialogue_text": "dialog pembicara 2", "listener_reaction": "reaksi pendengar terhadap dialog 2"}], "closing_action": "deskripsi aksi penutup"}. Semua nilai string harus dalam Bahasa Indonesia.`;
             
             try {
-                const response = await fetch('/api/translate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: contextPrompt })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`API request failed with status ${response.status}`);
-                }
-
-                const result = await response.json();
+                const result = await callAPIFunction(prompt);
 
                 if (result.candidates && result.candidates[0].content.parts[0].text) {
-                    const generatedText = result.candidates[0].content.parts[0].text;
-                    targetElement.value = generatedText.replace(/["*]/g, '').trim();
+                    const storyText = result.candidates[0].content.parts[0].text;
+                    console.log("Raw response from AI:", storyText); // For debugging
+                    
+                    let storyData;
+                    try {
+                        // Membersihkan string JSON dari markdown sebelum parsing
+                        const cleanedJsonString = storyText.replace(/```json\n?|```/g, '').trim();
+                        storyData = JSON.parse(cleanedJsonString);
+                    } catch (parseError) {
+                        console.error("JSON Parsing Error:", parseError, "\nRaw text was:", storyText);
+                        throw new Error("Gagal memproses data dari AI. Format tidak valid.");
+                    }
+
+                    // Populate form fields
+                    document.getElementById('lokasiPercakapan').value = storyData.location || '';
+                    document.getElementById('atmosferAwal').value = storyData.atmosphere || 'Netral';
+                    document.getElementById('pencahayaan').value = storyData.lighting || 'Cahaya Alami';
+                    document.getElementById('closingAction').value = storyData.closing_action || '';
+
+                    // Populate characters
+                    if (storyData.characters && storyData.characters.length >= 2) {
+                        for (let i = 0; i < 2; i++) {
+                            if (characterCounter < i + 1) addCharacter();
+                            document.getElementById(`namaKarakter${i+1}`).value = storyData.characters[i].name || '';
+                            document.getElementById(`deskripsiFisik${i+1}`).value = storyData.characters[i].description || '';
+                            document.getElementById(`sifatKarakter${i+1}`).value = storyData.characters[i].personality || 'Netral';
+                        }
+                    }
+                    
+                    // Populate dialogues
+                    if (storyData.dialogue_turns && storyData.dialogue_turns.length >= 2) {
+                        for (let i = 0; i < 2; i++) {
+                            if (dialogCounter < i + 1) addDialog();
+                            document.getElementById(`aksiPembicara${i+1}`).value = storyData.dialogue_turns[i].speaker_action || '';
+                            document.getElementById(`dialogKunci${i+1}`).value = storyData.dialogue_turns[i].dialogue_text || '';
+                            document.getElementById(`reaksiPendengar${i+1}`).value = storyData.dialogue_turns[i].listener_reaction || '';
+                        }
+                    }
+                    
+                    setSpeakerOrder(); // Update speaker names in dropdowns
+                    showNotification('Cerita berhasil dibuat oleh AI!', 3000);
                 } else {
-                    showNotification('Gagal mendapatkan respons dari Gemini.', 3000, true);
+                    console.log("No valid candidates found in Gemini response:", result);
+                    showNotification('Gagal mendapatkan respons valid dari Gemini.', 3000, true);
                 }
             } catch (error) {
-                console.error("Gemini Suggestion Error:", error);
-                showNotification('Terjadi kesalahan saat menghubungi API Gemini.', 3000, true);
+                console.error("Gemini Story Error:", error);
+                showNotification(`Terjadi kesalahan: ${error.message}`, 5000, true);
             } finally {
                 button.innerHTML = originalButtonContent;
                 button.disabled = false;
@@ -804,7 +819,8 @@
 
             const t = {
                 main_command: "PERINTAH UTAMA: Buat video berdasarkan deskripsi naratif berikut dalam satu alur yang koheren dan patuhi semua detail peran, aksi, dan dialog.",
-                lip_sync_command: "PERINTAH WAJIB: Pastikan gerak bibir (lip-sync) setiap karakter sinkron secara akurat dengan dialog yang diucapkan sesuai bahasa yang dipilih.",
+                no_text_command: "PERINTAH WAJIB: JANGAN MENAMPILKAN TEKS APAPUN DI LAYAR, LAYAR HARUS BERSIH DARI TEKS APAPUN.",
+                lip_sync_command: "PERINTAH WAJIB: BIBIR HARUS SINGKRON DAN SESUAI DENGAN KATA YANG DIUCAPKAN.",
                 conversation_flow_command: "PERINTAH WAJIB UNTUK ALUR PERCAKAPAN: Terapkan sistem giliran bicara yang ketat. Satu karakter harus sepenuhnya diam setelah menyelesaikan dialognya. Karakter berikutnya hanya boleh mulai berbicara atau bereaksi setelah karakter pertama benar-benar berhenti.",
                 scene_intro: (style, quality, ratio, location, time, atmosphere, lighting, dof) => `Buat sebuah video ${style} berkualitas ${quality} dengan rasio ${ratio}. Adegan berlatar di ${location} pada ${time}, menciptakan atmosfer ${atmosphere} dengan pencahayaan ${lighting} dan efek kedalaman kamera ${dof}.`,
                 chars_intro: "Karakter yang terlibat adalah: ",
@@ -829,6 +845,7 @@
 
             // Main Command
             promptParts.push(t.main_command);
+            promptParts.push(t.no_text_command);
             promptParts.push(t.lip_sync_command);
             promptParts.push(t.conversation_flow_command);
 
@@ -940,7 +957,6 @@
             }
 
             const negativeOptions = [
-                {id: 'neg-no-text', text: 'PERINTAH TEGAS DAN MUTLAK: Jangan render atau tampilkan teks, tulisan, judul, subtitle, logo, atau watermark APAPUN di dalam video. Video harus benar-benar bersih dari semua elemen teks.'},
                 {id: 'neg-no-subtitle', text: 'tidak ada subtitle'},
                 {id: 'neg-no-logo', text: 'tidak ada logo'},
                 {id: 'neg-no-watermark', text: 'tidak ada watermark'},
@@ -969,20 +985,13 @@
                 try {
                     const translationPrompt = `Translate the following text to English. IMPORTANT RULE: Do not translate any text that is inside quotation marks ("..."). Keep the text inside the quotation marks in its original language. Text to translate: ${finalPrompt}`;
                     
-                    const response = await fetch('/api/translate', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ prompt: translationPrompt })
-                    });
+                    const result = await callAPIFunction(translationPrompt);
 
-                    if (!response.ok) throw new Error(`Proxy request failed with status ${response.status}`);
-                    
-                    const result = await response.json();
                     if (result.candidates && result.candidates[0].content.parts[0].text) {
                         finalPrompt = result.candidates[0].content.parts[0].text;
                         showNotification('Terjemahan selesai!', 2000);
                     } else {
-                        throw new Error('Invalid response structure from proxy.');
+                        throw new Error('Invalid response structure from Gemini.');
                     }
                 } catch (error) {
                     console.error("Gemini Translation Error:", error);
@@ -1000,12 +1009,7 @@
         }
         
         // --- EVENT LISTENERS ---
-        document.body.addEventListener('click', function(event) {
-            if (event.target.closest('.gemini-btn')) {
-                generateWithGemini(event.target.closest('.gemini-btn'));
-            }
-        });
-
+        generateStoryBtn.addEventListener('click', generateStoryWithAI);
         addCharacterBtn.addEventListener('click', addCharacter);
         removeLastCharacterBtn.addEventListener('click', removeLastCharacter);
         addDialogBtn.addEventListener('click', addDialog);
