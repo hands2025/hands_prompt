@@ -23,8 +23,6 @@
         .card-bg { background-color: rgba(30, 41, 59, 0.5); }
         .loader { border: 2px solid #f3f3f3; border-top: 2px solid #6366f1; border-radius: 50%; width: 16px; height: 16px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .gemini-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); }
-        .gemini-btn-textarea { right: 8px; top: 8px; transform: none; }
         
         .animate-rainbow {
             background-size: 400% 400%;
@@ -35,6 +33,13 @@
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
+        }
+        .image-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 0.5rem;
+            object-fit: cover;
+            border: 2px solid #334155;
         }
     </style>
 </head>
@@ -428,6 +433,28 @@
                     </div>
                 `;
             }
+            
+            // Add image upload only for the first two characters
+            let imageUploadHtml = '';
+            if (num <= 2) {
+                imageUploadHtml = `
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Gambar Karakter ${num} (Opsional)</label>
+                        <div class="flex items-center gap-4">
+                            <img id="imagePreview${num}" src="https://placehold.co/80x80/1e293b/475569?text=Unggah" class="image-preview">
+                            <input type="file" id="imageUpload${num}" class="hidden" accept="image/*" data-character-num="${num}">
+                            <label for="imageUpload${num}" class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition">
+                                Unggah Gambar
+                            </label>
+                            <button type="button" id="describeImageBtn${num}" class="hidden describe-image-btn flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-4 rounded-md transition" data-character-num="${num}">
+                                <i data-lucide="scan-face" class="w-5 h-5"></i>
+                                <span>Deskripsikan</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
 
             return `
                 <div class="character-form pt-6 border-t border-slate-700/60 first:border-t-0 first:pt-0">
@@ -453,7 +480,7 @@
                         </div>
                         <div>
                             <label for="deskripsiFisik${num}" class="block text-sm font-medium text-slate-300 mb-1">Deskripsi Fisik</label>
-                            <textarea id="deskripsiFisik${num}" rows="2" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Contoh: Pria, 30-an, memakai kemeja..."></textarea>
+                            <textarea id="deskripsiFisik${num}" rows="2" class="w-full p-2.5 pr-10 glass-input rounded-md" placeholder="Unggah gambar atau akan digenerate AI..."></textarea>
                         </div>
                         <div>
                              <label for="sifatKarakter${num}" class="block text-sm font-medium text-slate-300 mb-1">Sifat/Kepribadian</label>
@@ -474,6 +501,7 @@
                                  <option value="Licik">Licik</option>
                              </select>
                         </div>
+                        ${imageUploadHtml}
                     </div>
                 </div>`;
         }
@@ -707,13 +735,13 @@
             });
         }
         
-        async function callAPIFunction(prompt) {
+        async function callAPIFunction(prompt, imageData = null) {
             const response = await fetch('/api/generate', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ prompt }),
+                body: JSON.stringify({ prompt, imageData }),
             });
 
             if (!response.ok) {
@@ -767,10 +795,14 @@
                     // Populate characters
                     if (storyData.characters && storyData.characters.length >= 2) {
                         for (let i = 0; i < 2; i++) {
-                            if (characterCounter < i + 1) addCharacter();
-                            document.getElementById(`namaKarakter${i+1}`).value = storyData.characters[i].name || '';
-                            document.getElementById(`deskripsiFisik${i+1}`).value = storyData.characters[i].description || '';
-                            document.getElementById(`sifatKarakter${i+1}`).value = storyData.characters[i].personality || 'Netral';
+                            const charNum = i + 1;
+                            // Only update description if it's empty (no image was described)
+                            if (!document.getElementById(`deskripsiFisik${charNum}`).value) {
+                                document.getElementById(`deskripsiFisik${charNum}`).value = storyData.characters[i].description || '';
+                            }
+                            if (characterCounter < charNum) addCharacter();
+                            document.getElementById(`namaKarakter${charNum}`).value = storyData.characters[i].name || '';
+                            document.getElementById(`sifatKarakter${charNum}`).value = storyData.characters[i].personality || 'Netral';
                         }
                     }
                     
@@ -1024,6 +1056,68 @@
         removeLastDialogBtn.addEventListener('click', removeLastDialog);
         addShotBtn.addEventListener('click', addShot);
         removeLastShotBtn.addEventListener('click', removeLastShot);
+        
+        characterContainer.addEventListener('change', (e) => {
+            if (e.target.matches('input[type="file"]')) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const charNum = e.target.dataset.characterNum;
+                const preview = document.getElementById(`imagePreview${charNum}`);
+                const describeBtn = document.getElementById(`describeImageBtn${charNum}`);
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    preview.src = event.target.result;
+                    describeBtn.classList.remove('hidden');
+                    lucide.createIcons();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        characterContainer.addEventListener('click', async (e) => {
+            const button = e.target.closest('.describe-image-btn');
+            if (button) {
+                const charNum = button.dataset.characterNum;
+                const preview = document.getElementById(`imagePreview${charNum}`);
+                const descriptionTextarea = document.getElementById(`deskripsiFisik${charNum}`);
+                
+                if (!preview.src || preview.src.startsWith('https://placehold.co')) {
+                    showNotification('Unggah gambar terlebih dahulu!', 3000, true);
+                    return;
+                }
+
+                const originalButtonContent = button.innerHTML;
+                button.innerHTML = '<div class="loader"></div>';
+                button.disabled = true;
+
+                try {
+                    const imageData = preview.src;
+                    const prompt = "PERINTAH TEGAS: Langsung berikan deskripsi. JANGAN gunakan kalimat pembuka. Deskripsikan penampilan fisik, pakaian, gaya, dan perkiraan usia orang dalam gambar ini dalam satu paragraf yang detail untuk sebuah skenario video.";
+                    const result = await callAPIFunction(prompt, imageData);
+
+                    if (result.candidates && result.candidates[0].content.parts[0].text) {
+                        let description = result.candidates[0].content.parts[0].text;
+                        // Also remove any potential preamble client-side for robustness
+                        const preambleToRemove = /karena saya tidak dapat melihat gambar, saya akan memberikan deskripsi umum yang dapat anda sesuaikan dengan gambar anda:/i;
+                        description = description.replace(preambleToRemove, '').trim();
+
+                        descriptionTextarea.value = description;
+                        showNotification(`Deskripsi untuk Karakter ${charNum} berhasil dibuat!`, 3000);
+                    } else {
+                        throw new Error("Respons dari AI tidak valid.");
+                    }
+                } catch (error) {
+                    console.error("Image Description Error:", error);
+                    showNotification(`Gagal mendeskripsikan gambar: ${error.message}`, 5000, true);
+                } finally {
+                    button.innerHTML = originalButtonContent;
+                    button.disabled = false;
+                    lucide.createIcons();
+                }
+            }
+        });
         
         shotContainer.addEventListener('change', (e) => {
             if (e.target.classList.contains('shot-type-select')) {
