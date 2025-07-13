@@ -821,16 +821,21 @@
                 main_command: "PERINTAH UTAMA: Buat video berdasarkan deskripsi naratif berikut dalam satu alur yang koheren dan patuhi semua detail peran, aksi, dan dialog.",
                 no_text_command: "PERINTAH WAJIB: JANGAN MENAMPILKAN TEKS APAPUN DI LAYAR, LAYAR HARUS BERSIH DARI TEKS APAPUN.",
                 lip_sync_command: "PERINTAH WAJIB: BIBIR HARUS SINGKRON DAN SESUAI DENGAN KATA YANG DIUCAPKAN.",
-                conversation_flow_command: "PERINTAH WAJIB UNTUK ALUR PERCAKAPAN: Terapkan sistem giliran bicara yang ketat. Satu karakter harus sepenuhnya diam setelah menyelesaikan dialognya. Karakter berikutnya hanya boleh mulai berbicara atau bereaksi setelah karakter pertama benar-benar berhenti.",
+                conversation_flow_command: "PERINTAH ALUR PERCAKAPAN: Patuhi urutan giliran bicara secara ketat. Satu karakter berbicara lalu berhenti total. Karakter lain hanya boleh bereaksi atau berbicara SETELAH giliran sebelumnya selesai. Jangan gabungkan aksi berbicara dan bereaksi dalam satu waktu.",
                 scene_intro: (style, quality, ratio, location, time, atmosphere, lighting, dof) => `Buat sebuah video ${style} berkualitas ${quality} dengan rasio ${ratio}. Adegan berlatar di ${location} pada ${time}, menciptakan atmosfer ${atmosphere} dengan pencahayaan ${lighting} dan efek kedalaman kamera ${dof}.`,
                 chars_intro: "Karakter yang terlibat adalah: ",
                 char_desc: (name, desc, personality, position, role) => `${name} (${desc}, bersifat ${personality}) sebagai ${role} yang berada di posisi ${position}`,
                 char_desc_no_role: (name, desc, personality, position) => `${name} (${desc}, bersifat ${personality}) yang berada di posisi ${position}`,
                 interaction_intro: "Alur interaksi adalah sebagai berikut: ",
-                dialog_turn: (timing, speaker, action, mood, accent, text, reaction, listener) => {
-                    let mainPart = (timing ? `Pada detik ${timing}, ` : '') + `${speaker} (${action}) berbicara dengan mood ${mood} (Logat: ${accent}) dan mengatakan, "${text}".`;
-                    let reactionPart = reaction ? ` Sebagai reaksi, ${listener} ${reaction}.` : '';
-                    return mainPart + reactionPart;
+                dialog_turn: (timing, speaker, action, mood, accent, text, listener, reaction) => {
+                    let turnParts = [];
+                    if (text) {
+                        turnParts.push((timing ? `Pada detik ${timing}, ` : '') + `${speaker} (${action}) berbicara dengan mood ${mood} (Logat: ${accent}) dan mengatakan, "${text}" lalu diam total.`);
+                    }
+                    if (reaction) {
+                        turnParts.push(`SEGERA SETELAH ITU, ${listener} bereaksi dengan ${reaction}.`);
+                    }
+                    return turnParts.join(' ');
                 },
                 cinematic_intro: " Secara sinematik, gunakan gaya berikut: ",
                 shot_desc: (type, timing) => `${type} pada durasi ${timing}`,
@@ -884,7 +889,7 @@
 
             const dialogForms = document.querySelectorAll('.dialog-segment');
             if (dialogForms.length > 0) {
-                let dialogTextParts = [];
+                let interactionSteps = [];
                 for (let i = 0; i < dialogForms.length; i++) {
                     const num = i + 1;
                     const speaker = (i % 2 === 0) ? penanyaNama : penjawabNama;
@@ -896,12 +901,15 @@
                     const accent = getDisplayValue(`bahasaDialog${num}`);
                     const text = getDisplayValue(`dialogKunci${num}`);
                     const reaction = getDisplayValue(`reaksiPendengar${num}`);
-
-                    dialogTextParts.push(t.dialog_turn(timing, speaker, action, mood, accent, text, reaction, listener));
+                    
+                    const turnText = t.dialog_turn(timing, speaker, action, mood, accent, text, listener, reaction);
+                    if (turnText) {
+                        interactionSteps.push(turnText);
+                    }
                 }
 
-                if (dialogTextParts.length > 0) {
-                    narrativeParts.push(t.interaction_intro + dialogTextParts.join(" "));
+                if (interactionSteps.length > 0) {
+                    narrativeParts.push(t.interaction_intro + interactionSteps.join(" Giliran berikutnya: "));
                 }
             }
 
