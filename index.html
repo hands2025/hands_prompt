@@ -463,7 +463,7 @@
                         <div class="grid grid-cols-1 ${gridLayout} gap-4">
                             <div>
                                 <label for="namaKarakter${num}" class="block text-sm font-medium text-slate-300 mb-1">Nama</label>
-                                <input type="text" id="namaKarakter${num}" class="character-name-input w-full p-2.5 glass-input rounded-md" placeholder="${placeholder}" value="${defaultValue}">
+                                <input type="text" id="namaKarakter${num}" class="character-name-input w-full p-2.5 glass-input rounded-md" placeholder="${placeholder}" value="">
                             </div>
                             <div>
                                 <label for="posisiKarakter${num}" class="block text-sm font-medium text-slate-300 mb-1">Posisi</label>
@@ -796,12 +796,14 @@
                     if (storyData.characters && storyData.characters.length >= 2) {
                         for (let i = 0; i < 2; i++) {
                             const charNum = i + 1;
-                            // Only update description if it's empty (no image was described)
+                             if (characterCounter < charNum) addCharacter();
+                            // Only update name/description if it's empty
+                            if (!document.getElementById(`namaKarakter${charNum}`).value) {
+                                document.getElementById(`namaKarakter${charNum}`).value = storyData.characters[i].name || '';
+                            }
                             if (!document.getElementById(`deskripsiFisik${charNum}`).value) {
                                 document.getElementById(`deskripsiFisik${charNum}`).value = storyData.characters[i].description || '';
                             }
-                            if (characterCounter < charNum) addCharacter();
-                            document.getElementById(`namaKarakter${charNum}`).value = storyData.characters[i].name || '';
                             document.getElementById(`sifatKarakter${charNum}`).value = storyData.characters[i].personality || 'Netral';
                         }
                     }
@@ -1081,6 +1083,7 @@
             if (button) {
                 const charNum = button.dataset.characterNum;
                 const preview = document.getElementById(`imagePreview${charNum}`);
+                const nameInput = document.getElementById(`namaKarakter${charNum}`);
                 const descriptionTextarea = document.getElementById(`deskripsiFisik${charNum}`);
                 
                 if (!preview.src || preview.src.startsWith('https://placehold.co')) {
@@ -1094,17 +1097,16 @@
 
                 try {
                     const imageData = preview.src;
-                    const prompt = "PERINTAH TEGAS: Langsung berikan deskripsi. JANGAN gunakan kalimat pembuka. Deskripsikan penampilan fisik, pakaian, gaya, dan perkiraan usia orang dalam gambar ini dalam satu paragraf yang detail untuk sebuah skenario video.";
+                    const prompt = "PERINTAH: Berdasarkan gambar ini, berikan satu nama yang cocok dan deskripsi fisik detail dalam satu paragraf. JANGAN gunakan kalimat pembuka. Berikan jawaban HANYA dalam format JSON yang valid seperti ini: {\"name\": \"Nama Karakter\", \"description\": \"Deskripsi detail karakter...\"}. PENTING: Nama dan deskripsi HARUS dalam Bahasa Indonesia.";
                     const result = await callAPIFunction(prompt, imageData);
 
                     if (result.candidates && result.candidates[0].content.parts[0].text) {
-                        let description = result.candidates[0].content.parts[0].text;
-                        // Also remove any potential preamble client-side for robustness
-                        const preambleToRemove = /karena saya tidak dapat melihat gambar, saya akan memberikan deskripsi umum yang dapat anda sesuaikan dengan gambar anda:/i;
-                        description = description.replace(preambleToRemove, '').trim();
-
-                        descriptionTextarea.value = description;
-                        showNotification(`Deskripsi untuk Karakter ${charNum} berhasil dibuat!`, 3000);
+                        const responseText = result.candidates[0].content.parts[0].text.replace(/```json\n?|```/g, '').trim();
+                        const parsedData = JSON.parse(responseText);
+                        
+                        nameInput.value = parsedData.name || '';
+                        descriptionTextarea.value = parsedData.description || '';
+                        showNotification(`Nama & Deskripsi untuk Karakter ${charNum} berhasil dibuat!`, 3000);
                     } else {
                         throw new Error("Respons dari AI tidak valid.");
                     }
